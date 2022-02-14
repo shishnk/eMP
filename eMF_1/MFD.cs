@@ -1,13 +1,13 @@
 namespace eMF_1;
 
-public enum TypePoint
+public enum PointType
 {
     Boundary,
     Internal,
     Dummy
 }
 
-public enum TypeBoundary
+public enum BoundaryType
 {
     Dirichlet = 1,
     Neumann = 2,
@@ -17,5 +17,15 @@ public enum TypeBoundary
 
 public class MFD
 {
-    
+    Grid grid;
+
+    public MFD(string areasPath, string boundariesPath)
+    {
+        grid = new(areasPath, boundariesPath);
+    }
+
+    public void Compute()
+    {
+        grid.Build();
+    }
 }
