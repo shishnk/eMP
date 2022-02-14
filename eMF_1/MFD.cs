@@ -9,23 +9,51 @@ public enum PointType
 
 public enum BoundaryType
 {
-    Dirichlet = 1,
-    Neumann = 2,
-    Mixed = 3,
-    None = 4
+    None,
+    Dirichlet,
+    Neumann,
+    Mixed
+}
+
+public enum GridType
+{
+    Regular,
+    Irregular
 }
 
 public class MFD
 {
-    Grid grid;
+    private Grid _grid;
+    private ITest _test;
+    private ISolver _solver;
 
-    public MFD(string areasPath, string boundariesPath)
+    public MFD(Grid grid)
     {
-        grid = new(areasPath, boundariesPath);
+        _grid = grid;
     }
+
+    public void SetTest(ITest test)
+        => _test = test;
+
+    public void SetMethodSolvingSLAE(ISolver solver)
+        => _solver = solver;
 
     public void Compute()
     {
-        grid.Build();
+        try
+        {
+            if (_test is null)
+                throw new Exception("Set the test!");
+
+            if (_solver is null)
+                throw new Exception("Set the method solving SLAE!");
+
+            _grid.Build();
+
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
     }
 }
