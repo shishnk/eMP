@@ -4,6 +4,7 @@ public interface ISolver
 {
     public int MaxIters { get; init; }
     public double Eps { get; init; }
+    public double W { get; init; }
 
-    public void Compute();
+    public double[] Compute(DiagMatrix diagMatrix, double[] pr);
 }
