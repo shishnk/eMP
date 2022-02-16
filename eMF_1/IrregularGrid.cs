@@ -100,7 +100,7 @@ public class IrregularGrid : Grid
 
         for (int i = 0; i < _allLinesX.Count; i++)
             for (int j = 0; j < _allLinesY.Count; j++)
-                _points.Add(new(_allLinesX[i], _allLinesY[j], PointsTypes(_allLinesX[i], _allLinesY[j])));
+                _points.Add(new(_allLinesX[i], _allLinesY[j], i, j, PointsTypes(_allLinesX[i], _allLinesY[j])));
 
         WriteToFilePoints();
     }
@@ -110,7 +110,8 @@ public class IrregularGrid : Grid
         double eps = 1E-8;
 
         if ((x > LinesX[0] && x < LinesX[2] && y > LinesY[0] && y < LinesY[1])
-        || (x > LinesX[0] && x < LinesX[1] && y > LinesY[0] && y < LinesY[2]))
+        || (x > LinesX[0] && x < LinesX[1] && y > LinesY[0] && y < LinesY[2])
+        || (x == LinesX[1] && y == LinesY[1]))
             return PointType.Internal;
 
         for (int i = 0; i < _allLinesX.Count; i++)
@@ -132,19 +133,16 @@ public class IrregularGrid : Grid
     {
         using (var sw = new StreamWriter("points/boundaryPoints.txt"))
         {
-
             Points.ForEach(x => { if (x.PointType == PointType.Boundary) sw.WriteLine(x.ToString()); });
         }
 
         using (var sw = new StreamWriter("points/internalPoints.txt"))
         {
-
             Points.ForEach(x => { if (x.PointType == PointType.Internal) sw.WriteLine(x.ToString()); });
         }
 
         using (var sw = new StreamWriter("points/dummyPoints.txt"))
         {
-
             Points.ForEach(x => { if (x.PointType == PointType.Dummy) sw.WriteLine(x.ToString()); });
         }
     }
