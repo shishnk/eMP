@@ -133,17 +133,17 @@ public class IrregularGrid : Grid
     {
         using (var sw = new StreamWriter("points/boundaryPoints.txt"))
         {
-            Points.ForEach(x => { if (x.PointType == PointType.Boundary) sw.WriteLine(x.ToString()); });
+            Points.ForEach(x => { if (x.PointType == PointType.Boundary) sw.WriteLine(x); });
         }
 
         using (var sw = new StreamWriter("points/internalPoints.txt"))
         {
-            Points.ForEach(x => { if (x.PointType == PointType.Internal) sw.WriteLine(x.ToString()); });
+            Points.ForEach(x => { if (x.PointType == PointType.Internal) sw.WriteLine(x); });
         }
 
         using (var sw = new StreamWriter("points/dummyPoints.txt"))
         {
-            Points.ForEach(x => { if (x.PointType == PointType.Dummy) sw.WriteLine(x.ToString()); });
+            Points.ForEach(x => { if (x.PointType == PointType.Dummy) sw.WriteLine(x); });
         }
     }
 }
