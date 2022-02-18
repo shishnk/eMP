@@ -3,6 +3,7 @@ namespace eMF_1;
 public class DiagMatrix
 {
     public double[][] Diags { get; set; }
+    public int[] Indexes { get; init; }
     public int Size { get; init; }
     public int ZeroDiags { get; init; }
 
@@ -16,5 +17,6 @@ public class DiagMatrix
         Diags[2] = new double[countPoints - zeroDiags - 2];
         Diags[3] = new double[countPoints - 1];
         Diags[4] = new double[countPoints - zeroDiags - 2];
+        Indexes = new int[] { 0, -1, -2 - zeroDiags, 1, 2 + zeroDiags };
     }
 }
