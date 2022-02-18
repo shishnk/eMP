@@ -81,7 +81,7 @@ public class MFD
 
     private void Init()
     {
-        _matrix = new(_grid.Points.Count, _grid.LinesX.Length - 1);
+        _matrix = new(_grid.Points.Count, _grid.AllLinesX.Count - 2);
         _pr = new double[_matrix.Size];
         _q = new double[_matrix.Size];
     }
@@ -104,11 +104,11 @@ public class MFD
                     double hx = _grid.AllLinesX[_grid.Points[i].I + 1] - _grid.AllLinesX[_grid.Points[i].I];
                     double hy = _grid.AllLinesY[_grid.Points[i].J + 1] - _grid.AllLinesY[_grid.Points[i].J];
                     _pr[i] = _test.F(_grid.Points[i]);
-                    _matrix.Diags[0][i] = -(2.0 / (hx * hx) + 2.0 / (hy * hy));
-                    _matrix.Diags[1][i - 1] = 1.0 / (hx * hx);
-                    _matrix.Diags[3][i] = 1.0 / (hx * hx);
-                    _matrix.Diags[2][i - 3] = 1.0 / (hy * hy);
-                    _matrix.Diags[4][i] = 1.0 / (hy * hy);
+                    _matrix.Diags[0][i] = 2.0 / (hx * hx) + 2.0 / (hy * hy);
+                    _matrix.Diags[3][i] = -1.0 / (hy * hy);
+                    _matrix.Diags[4][i] = -1.0 / (hx * hx);
+                    _matrix.Diags[1][i + _matrix.Indexes[1]] = -1.0 / (hy * hy);
+                    _matrix.Diags[2][i + _matrix.Indexes[2]] = -1.0 / (hx * hx);
 
                     break;
 
