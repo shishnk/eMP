@@ -6,5 +6,5 @@ public class FirstTest : ITest
         => point.X * point.X;
 
     public double F(Point2D point)
-        => -4;
+        => -2;
 }
