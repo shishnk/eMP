@@ -1,13 +1,14 @@
 namespace eMF_1;
 
-public struct Point2D
+public class Point2D
 {
     public double X { get; init; }
     public double Y { get; init; }
     public int I { get; init; }
     public int J { get; init; }
-    public PointType PointType { get; set; }
-    public BoundaryType BoundaryType { get; set; } = BoundaryType.Dirichlet;
+    public PointType PointType { get; init; }
+    public BoundaryType BoundaryType { get; set; } = BoundaryType.None;
+    public int AreaNumber { get; set; }
 
     public Point2D(double x, double y, int i, int j, PointType pointType)
     {
