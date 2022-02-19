@@ -21,6 +21,14 @@ public enum GridType
     Irregular
 }
 
+public enum NormalType : sbyte
+{
+    LeftX = -1,
+    RightX = 1,
+    UpperY = 1,
+    BottomY = -1
+}
+
 public class MFD
 {
     private Grid _grid;
@@ -68,6 +76,7 @@ public class MFD
                 throw new Exception("Set the method solving SLAE!");
 
             _grid.Build();
+            _grid.AssignBoundaryConditions(_boundaries);
             Init();
             BuildMatrix();
             _q = _solver.Compute(_matrix, _pr);
@@ -86,16 +95,41 @@ public class MFD
         _q = new double[_matrix.Size];
     }
 
-    private void BuildMatrix() // TODO (разобраться с проблемой подсчета внутреннего узла, добавить краевые условия)
+    private void BuildMatrix()
     {
+        double h = 1E-14;
+
         for (int i = 0; i < _grid.Points.Count; i++)
         {
             switch (_grid.Points[i].PointType)
             {
                 case PointType.Boundary:
 
-                    _matrix.Diags[0][i] = 1;
-                    _pr[i] = _test.U(_grid.Points[i]);
+                    switch (_grid.Points[i].BoundaryType)
+                    {
+                        case BoundaryType.Dirichlet:
+
+                            _matrix.Diags[0][i] = 1;
+                            _pr[i] = _test.U(_grid.Points[i]);
+                            Console.WriteLine($"{_grid.Points[i]} normal is {_grid.Normal(_grid.Points[i])}");
+
+                            break;
+
+                        case BoundaryType.Neumann:
+
+                            // double lambda = _grid.Areas[_grid.Points[i].AreaNumber].Item2;
+
+                            // _matrix.Diags[0][i] =
+
+                            break;
+
+                        case BoundaryType.Mixed:
+                            break;
+
+                        default:
+                            throw new ArgumentOutOfRangeException(nameof(BoundaryType),
+                            $"This type of boundary does not exist: {_grid.Points[i].BoundaryType}");
+                    }
 
                     break;
 
@@ -103,12 +137,15 @@ public class MFD
 
                     double hx = _grid.AllLinesX[_grid.Points[i].I + 1] - _grid.AllLinesX[_grid.Points[i].I];
                     double hy = _grid.AllLinesY[_grid.Points[i].J + 1] - _grid.AllLinesY[_grid.Points[i].J];
+                    (double lambda, double gamma) =
+                    (_grid.Areas[_grid.Points[i].AreaNumber].Item2,
+                    _grid.Areas[_grid.Points[i].AreaNumber].Item3);
                     _pr[i] = _test.F(_grid.Points[i]);
-                    _matrix.Diags[0][i] = 2.0 / (hx * hx) + 2.0 / (hy * hy);
-                    _matrix.Diags[3][i] = -1.0 / (hy * hy);
-                    _matrix.Diags[4][i] = -1.0 / (hx * hx);
-                    _matrix.Diags[1][i + _matrix.Indexes[1]] = -1.0 / (hy * hy);
-                    _matrix.Diags[2][i + _matrix.Indexes[2]] = -1.0 / (hx * hx);
+                    _matrix.Diags[0][i] = lambda * (2.0 / (hx * hx) + 2.0 / (hy * hy)) + gamma;
+                    _matrix.Diags[3][i] = -lambda / (hy * hy);
+                    _matrix.Diags[4][i] = -lambda / (hx * hx);
+                    _matrix.Diags[1][i + _matrix.Indexes[1]] = -lambda / (hy * hy);
+                    _matrix.Diags[2][i + _matrix.Indexes[2]] = -lambda / (hx * hx);
 
                     break;
 
@@ -120,8 +157,11 @@ public class MFD
                     break;
 
                 default:
-                    break;
+                    throw new ArgumentOutOfRangeException(nameof(PointType),
+                    $"This type of point does not exist: {_grid.Points[i].PointType}");
             }
         }
+
+        Console.WriteLine("\n\n");
     }
 }
