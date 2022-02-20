@@ -38,6 +38,7 @@ public class MFD
     private Boundary[] _boundaries;
     private double[] _q;
     private double[] _pr;
+    private double _beta;
     public double[] Weights
         => _q;
 
@@ -47,6 +48,7 @@ public class MFD
         {
             using (var sr = new StreamReader(boundaryPath))
             {
+                _beta = double.Parse(sr.ReadLine());
                 _boundaries = sr.ReadToEnd().Split("\n")
                 .Select(str => Boundary.BoundaryParse(str)).ToArray();
             }
@@ -90,15 +92,18 @@ public class MFD
 
     private void Init()
     {
-        _matrix = new(_grid.Points.Count, _grid.AllLinesX.Count - 2);
+        _matrix = new(_grid.Points.Count, (_grid.AllLinesX.Count > _grid.AllLinesX.Count) ?
+        _grid.AllLinesX.Count - 2 : _grid.AllLinesY.Count - 2);
         _pr = new double[_matrix.Size];
         _q = new double[_matrix.Size];
     }
 
     private void BuildMatrix()
     {
-        double h = 1E-12;
+        double hx, hy, hix, hiy, hi, h = 1E-12;
         double lambda, gamma;
+        double ub, us, rightDerivative, leftDerivative;
+        NormalType normalType;
 
         for (int i = 0; i < _grid.Points.Count; i++)
         {
@@ -117,10 +122,9 @@ public class MFD
 
                         case BoundaryType.Neumann:
 
-                            double hi;
                             lambda = _grid.Areas[_grid.Points[i].AreaNumber].Item2;
 
-                            NormalType normalType = _grid.Normal(_grid.Points[i]);
+                            normalType = _grid.Normal(_grid.Points[i]);
 
                             switch (normalType)
                             {
@@ -135,7 +139,7 @@ public class MFD
 
                                 case NormalType.BottomY:
 
-                                    hi = _grid.AllLinesX[_grid.Points[i].J + 1] - _grid.AllLinesX[_grid.Points[i].J];
+                                    hi = _grid.AllLinesY[_grid.Points[i].J + 1] - _grid.AllLinesY[_grid.Points[i].J];
                                     _matrix.Diags[0][i] = lambda / hi;
                                     _matrix.Diags[3][i] = -lambda / hi;
                                     _pr[i] = RightDerivativeY(_grid.Points[i], h);
@@ -153,7 +157,7 @@ public class MFD
 
                                 case NormalType.UpperY:
 
-                                    hi = _grid.AllLinesX[_grid.Points[i].J] - _grid.AllLinesX[_grid.Points[i].J - 1];
+                                    hi = _grid.AllLinesY[_grid.Points[i].J] - _grid.AllLinesY[_grid.Points[i].J - 1];
                                     _matrix.Diags[0][i] = lambda / hi;
                                     _matrix.Diags[1][i + _matrix.Indexes[1]] = -lambda / hi;
                                     _pr[i] = LeftDerivativeY(_grid.Points[i], h);
@@ -167,8 +171,48 @@ public class MFD
 
                             break;
 
-                        case BoundaryType.Mixed:
+                        case BoundaryType.Mixed: // TODO
+
+                            lambda = _grid.Areas[_grid.Points[i].AreaNumber].Item2;
+
+                            normalType = _grid.Normal(_grid.Points[i]);
+
+                            switch (normalType)
+                            {
+                                case NormalType.LeftX:
+
+                                    hi = _grid.AllLinesX[_grid.Points[i].I + 1] - _grid.AllLinesX[_grid.Points[i].I];
+                                    us = _test.U(_grid.Points[i]);
+                                    rightDerivative = RightDerivativeX(_grid.Points[i], h);
+                                    ub = -lambda * rightDerivative / _beta + us;
+                                    _matrix.Diags[0][i] = lambda / hi + _beta * us;
+                                    _matrix.Diags[4][i] = -lambda / hi;
+                                    _pr[i] = rightDerivative + _beta * (us - ub);
+
+                                    break;
+
+                                case NormalType.BottomY:
+
+
+                                    break;
+
+                                case NormalType.RightX:
+
+
+                                    break;
+
+                                case NormalType.UpperY:
+
+
+                                    break;
+
+                                default:
+                                    throw new ArgumentOutOfRangeException(nameof(normalType),
+                                    $"This type of normal does not exist: {normalType}");
+                            }
+
                             break;
+
 
                         default:
                             throw new ArgumentOutOfRangeException(nameof(BoundaryType),
@@ -179,19 +223,34 @@ public class MFD
 
                 case PointType.Internal:
 
-                    double hx = _grid.AllLinesX[_grid.Points[i].I + 1] - _grid.AllLinesX[_grid.Points[i].I];
-                    double hy = _grid.AllLinesY[_grid.Points[i].J + 1] - _grid.AllLinesY[_grid.Points[i].J];
+                    hx = _grid.AllLinesX[_grid.Points[i].I + 1] - _grid.AllLinesX[_grid.Points[i].I];
+                    hy = _grid.AllLinesY[_grid.Points[i].J + 1] - _grid.AllLinesY[_grid.Points[i].J];
 
                     (lambda, gamma) =
                     (_grid.Areas[_grid.Points[i].AreaNumber].Item2,
                     _grid.Areas[_grid.Points[i].AreaNumber].Item3);
 
-                    _pr[i] = _test.F(_grid.Points[i]);
-                    _matrix.Diags[0][i] = lambda * (2.0 / (hx * hx) + 2.0 / (hy * hy)) + gamma;
-                    _matrix.Diags[3][i] = -lambda / (hy * hy);
-                    _matrix.Diags[4][i] = -lambda / (hx * hx);
-                    _matrix.Diags[1][i + _matrix.Indexes[1]] = -lambda / (hy * hy);
-                    _matrix.Diags[2][i + _matrix.Indexes[2]] = -lambda / (hx * hx);
+                    if (_grid is RegularGrid)
+                    {
+                        _pr[i] = _test.F(_grid.Points[i]);
+                        _matrix.Diags[0][i] = lambda * (2.0 / (hx * hx) + 2.0 / (hy * hy)) + gamma;
+                        _matrix.Diags[3][i] = -lambda / (hy * hy);
+                        _matrix.Diags[4][i] = -lambda / (hx * hx);
+                        _matrix.Diags[1][i + _matrix.Indexes[1]] = -lambda / (hy * hy);
+                        _matrix.Diags[2][i + _matrix.Indexes[2]] = -lambda / (hx * hx);
+                    }
+                    else
+                    {
+                        hix = _grid.AllLinesX[_grid.Points[i].I] - _grid.AllLinesX[_grid.Points[i].I - 1];
+                        hiy = _grid.AllLinesY[_grid.Points[i].J] - _grid.AllLinesX[_grid.Points[i].J - 1];
+
+                        _pr[i] = _test.F(_grid.Points[i]);
+                        _matrix.Diags[0][i] = lambda * (2 / (hix * hx) + 2 / (hiy * hy)) + gamma;
+                        _matrix.Diags[2][i + _matrix.Indexes[2]] = -lambda * 2 / (hix * (hx + hix));
+                        _matrix.Diags[1][i + _matrix.Indexes[1]] = -lambda * 2 / (hiy * (hy + hiy));
+                        _matrix.Diags[4][i] = -lambda * 2 / (hx * (hx + hix));
+                        _matrix.Diags[3][i] = -lambda * 2 / (hy * (hy + hiy));
+                    }
 
                     break;
 
