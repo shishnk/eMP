@@ -28,6 +28,12 @@ public class Point2D
         return point;
     }
 
+    public static Point2D operator +(Point2D point, (double, double) value)
+        => new(point.X + value.Item1, point.Y + value.Item2, point.I, point.J, point.PointType);
+
+    public static Point2D operator -(Point2D point, (double, double) value)
+        => new(point.X - value.Item1, point.Y - value.Item2, point.I, point.J, point.PointType);
+
     public override string ToString()
         => $"{X} {Y}";
 }
