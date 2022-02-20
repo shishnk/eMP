@@ -21,12 +21,12 @@ public enum GridType
     Irregular
 }
 
-public enum NormalType : sbyte
+public enum NormalType
 {
-    LeftX = -1,
-    RightX = 1,
-    UpperY = 1,
-    BottomY = -1
+    LeftX,
+    RightX,
+    UpperY,
+    BottomY
 }
 
 public class MFD
@@ -97,7 +97,8 @@ public class MFD
 
     private void BuildMatrix()
     {
-        double h = 1E-14;
+        double h = 1E-12;
+        double lambda, gamma;
 
         for (int i = 0; i < _grid.Points.Count; i++)
         {
@@ -111,15 +112,58 @@ public class MFD
 
                             _matrix.Diags[0][i] = 1;
                             _pr[i] = _test.U(_grid.Points[i]);
-                            Console.WriteLine($"{_grid.Points[i]} normal is {_grid.Normal(_grid.Points[i])}");
 
                             break;
 
                         case BoundaryType.Neumann:
 
-                            // double lambda = _grid.Areas[_grid.Points[i].AreaNumber].Item2;
+                            double hi;
+                            lambda = _grid.Areas[_grid.Points[i].AreaNumber].Item2;
 
-                            // _matrix.Diags[0][i] =
+                            NormalType normalType = _grid.Normal(_grid.Points[i]);
+
+                            switch (normalType)
+                            {
+                                case NormalType.LeftX:
+
+                                    hi = _grid.AllLinesX[_grid.Points[i].I + 1] - _grid.AllLinesX[_grid.Points[i].I];
+                                    _matrix.Diags[0][i] = -lambda / hi;
+                                    _matrix.Diags[4][i] = lambda / hi;
+                                    _pr[i] = RightDerivativeX(_grid.Points[i], h);
+
+                                    break;
+
+                                case NormalType.BottomY:
+
+                                    hi = _grid.AllLinesX[_grid.Points[i].J + 1] - _grid.AllLinesX[_grid.Points[i].J];
+                                    _matrix.Diags[0][i] = lambda / hi;
+                                    _matrix.Diags[3][i] = -lambda / hi;
+                                    _pr[i] = RightDerivativeY(_grid.Points[i], h);
+
+                                    break;
+
+                                case NormalType.RightX:
+
+                                    hi = _grid.AllLinesX[_grid.Points[i].I] - _grid.AllLinesX[_grid.Points[i].I - 1];
+                                    _matrix.Diags[0][i] = lambda / hi;
+                                    _matrix.Diags[2][i + _matrix.Indexes[2]] = -lambda / hi;
+                                    _pr[i] = LeftDerivativeX(_grid.Points[i], h);
+
+                                    break;
+
+                                case NormalType.UpperY:
+
+                                    hi = _grid.AllLinesX[_grid.Points[i].J] - _grid.AllLinesX[_grid.Points[i].J - 1];
+                                    _matrix.Diags[0][i] = lambda / hi;
+                                    _matrix.Diags[1][i + _matrix.Indexes[1]] = -lambda / hi;
+                                    _pr[i] = LeftDerivativeY(_grid.Points[i], h);
+
+                                    break;
+
+                                default:
+                                    throw new ArgumentOutOfRangeException(nameof(normalType),
+                                    $"This type of normal does not exist: {normalType}");
+                            }
 
                             break;
 
@@ -137,9 +181,11 @@ public class MFD
 
                     double hx = _grid.AllLinesX[_grid.Points[i].I + 1] - _grid.AllLinesX[_grid.Points[i].I];
                     double hy = _grid.AllLinesY[_grid.Points[i].J + 1] - _grid.AllLinesY[_grid.Points[i].J];
-                    (double lambda, double gamma) =
+
+                    (lambda, gamma) =
                     (_grid.Areas[_grid.Points[i].AreaNumber].Item2,
                     _grid.Areas[_grid.Points[i].AreaNumber].Item3);
+
                     _pr[i] = _test.F(_grid.Points[i]);
                     _matrix.Diags[0][i] = lambda * (2.0 / (hx * hx) + 2.0 / (hy * hy)) + gamma;
                     _matrix.Diags[3][i] = -lambda / (hy * hy);
@@ -161,7 +207,17 @@ public class MFD
                     $"This type of point does not exist: {_grid.Points[i].PointType}");
             }
         }
-
-        Console.WriteLine("\n\n");
     }
+
+    private double LeftDerivativeX(Point2D point, double h)
+        => (_test.U(point) - _test.U(point - (h, 0))) / h;
+
+    private double LeftDerivativeY(Point2D point, double h)
+        => (_test.U(point) - _test.U(point - (0, h))) / h;
+
+    private double RightDerivativeX(Point2D point, double h)
+        => (_test.U(point + (h, 0)) - _test.U(point)) / h;
+
+    private double RightDerivativeY(Point2D point, double h)
+        => (_test.U(point + (0, h)) - _test.U(point)) / h;
 }
