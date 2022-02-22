@@ -10,6 +10,8 @@ public class GridFactory
 
             GridType.Irregular => new IrregularGrid(path),
 
+            GridType.Nested => new NestedGrid(path),
+
             _ => throw new ArgumentOutOfRangeException(nameof(gridType),
             $"This type of grid does not exist: {gridType}")
         };
