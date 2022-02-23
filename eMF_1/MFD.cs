@@ -18,7 +18,8 @@ public enum BoundaryType
 public enum GridType
 {
     Regular,
-    Irregular
+    Irregular,
+    Nested
 }
 
 public enum NormalType
@@ -82,7 +83,6 @@ public class MFD
             Init();
             BuildMatrix();
             _q = _solver.Compute(_matrix, _pr);
-
         }
         catch (Exception ex)
         {
@@ -249,9 +249,10 @@ public class MFD
                     (_grid.Areas[_grid.Points[i].AreaNumber].Item2,
                     _grid.Areas[_grid.Points[i].AreaNumber].Item3);
 
+                    _pr[i] = _test.F(_grid.Points[i]);
+
                     if (_grid is RegularGrid)
                     {
-                        _pr[i] = _test.F(_grid.Points[i]);
                         _matrix.Diags[0][i] = lambda * (2.0 / (hx * hx) + 2.0 / (hy * hy)) + gamma;
                         _matrix.Diags[3][i] = -lambda / (hy * hy);
                         _matrix.Diags[4][i] = -lambda / (hx * hx);
@@ -261,14 +262,13 @@ public class MFD
                     else
                     {
                         hix = _grid.AllLinesX[_grid.Points[i].I] - _grid.AllLinesX[_grid.Points[i].I - 1];
-                        hiy = _grid.AllLinesY[_grid.Points[i].J] - _grid.AllLinesX[_grid.Points[i].J - 1];
+                        hiy = _grid.AllLinesY[_grid.Points[i].J] - _grid.AllLinesY[_grid.Points[i].J - 1];
 
-                        _pr[i] = _test.F(_grid.Points[i]);
-                        _matrix.Diags[0][i] = lambda * (2 / (hix * hx) + 2 / (hiy * hy)) + gamma;
-                        _matrix.Diags[2][i + _matrix.Indexes[2]] = -lambda * 2 / (hix * (hx + hix));
-                        _matrix.Diags[1][i + _matrix.Indexes[1]] = -lambda * 2 / (hiy * (hy + hiy));
-                        _matrix.Diags[4][i] = -lambda * 2 / (hx * (hx + hix));
-                        _matrix.Diags[3][i] = -lambda * 2 / (hy * (hy + hiy));
+                        _matrix.Diags[0][i] = lambda * (2.0 / (hix * hx) + 2.0 / (hiy * hy)) + gamma;
+                        _matrix.Diags[2][i + _matrix.Indexes[2]] = -lambda * 2.0 / (hix * (hx + hix));
+                        _matrix.Diags[1][i + _matrix.Indexes[1]] = -lambda * 2.0 / (hiy * (hy + hiy));
+                        _matrix.Diags[4][i] = -lambda * 2.0 / (hx * (hx + hix));
+                        _matrix.Diags[3][i] = -lambda * 2.0 / (hy * (hy + hiy));
                     }
 
                     break;
