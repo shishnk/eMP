@@ -1,33 +1,31 @@
 namespace eMF_1;
 
-public class RegularGrid : Grid
-{
+public class RegularGrid : Grid {
     private List<double> _allLinesX;
     private List<double> _allLinesY;
     private List<Point2D> _points;
-    public override double[] LinesX { get; init; }
-    public override double[] LinesY { get; init; }
-    public override List<double> AllLinesX
-        => _allLinesX;
-    public override List<double> AllLinesY
-        => _allLinesY;
-    public override List<Point2D> Points
-        => _points;
-    public override (int, double, double, int, int, int, int)[] Areas { get; init; }
+    private (int, double, double, int, int, int, int)[] _areas;
+    public override ImmutableArray<double> LinesX { get; init; }
+    public override ImmutableArray<double> LinesY { get; init; }
+    public override ImmutableList<double> AllLinesX
+        => _allLinesX.ToImmutableList();
+    public override ImmutableList<double> AllLinesY
+        => _allLinesY.ToImmutableList();
+    public override ImmutableList<Point2D> Points
+        => _points.ToImmutableList();
+    public override ImmutableArray<(int, double, double, int, int, int, int)> Areas
+        => _areas.ToImmutableArray();
     public int SplitsX { get; init; }
     public int SplitsY { get; init; }
 
-    public RegularGrid(string path)
-    {
-        try
-        {
-            using (var sr = new StreamReader(path))
-            {
-                LinesX = sr.ReadLine().Split().Select(value => double.Parse(value)).ToArray();
-                LinesY = sr.ReadLine().Split().Select(value => double.Parse(value)).ToArray();
+    public RegularGrid(string path) {
+        try {
+            using (var sr = new StreamReader(path)) {
+                LinesX = sr.ReadLine().Split().Select(value => double.Parse(value)).ToImmutableArray();
+                LinesY = sr.ReadLine().Split().Select(value => double.Parse(value)).ToImmutableArray();
                 SplitsX = int.Parse(sr.ReadLine());
                 SplitsY = int.Parse(sr.ReadLine());
-                Areas = sr.ReadToEnd().Split("\n").Select(row => row.Split())
+                _areas = sr.ReadToEnd().Split("\n").Select(row => row.Split())
                 .Select(value => (int.Parse(value[0]), double.Parse(value[1]), double.Parse(value[2]),
                 int.Parse(value[3]), int.Parse(value[4]), int.Parse(value[5]), int.Parse(value[6]))).ToArray();
             }
@@ -35,15 +33,12 @@ public class RegularGrid : Grid
             _allLinesX = new();
             _allLinesY = new();
             _points = new();
-        }
-        catch (Exception ex)
-        {
+        } catch (Exception ex) {
             Console.WriteLine(ex.Message);
         }
     }
 
-    public override void Build()
-    {
+    public override void Build() {
         double h;
         double lenght = LinesX.Last() - LinesX.First();
 
