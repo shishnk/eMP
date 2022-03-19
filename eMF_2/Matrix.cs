@@ -1,6 +1,8 @@
 namespace eMF_2;
 
-interface IMatrix { }
+interface IMatrix { 
+    public double ByIndex(uint i, uint j);
+}
 
 /// <summary>
 /// Класс <c>TapeMatrix</c> используется для создания матрицы
