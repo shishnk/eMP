@@ -9,7 +9,7 @@ public static class Basis {
         => 2 * (x - 0.5) * (x - 1);
 
     public static double Psi2(double x)
-        => -4 * x * (x- 1);
+        => -4 * x * (x - 1);
 
     public static double Psi3(double x)
         => 2 * x * (x - 0.5);
