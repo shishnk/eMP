@@ -30,7 +30,7 @@ public class TapeMatrix : IMatrix {
     /// Метод <c>ByIndex</c> возвращает элемент матрицы по индексам как если бы она была плотной.
     /// Первый аргумент <c>i</c> - строка, второй <c>j</c> - столбец, индексация с нуля.
     /// </summary>
-    public async double ByIndex(uint i, uint j) {
+    public double ByIndex(uint i, uint j) {
         if (i > Dimension || j > Dimension) {
             throw "У матрицы нет элемента с такими индексами.";
         }
