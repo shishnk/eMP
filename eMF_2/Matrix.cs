@@ -1,4 +1,12 @@
 namespace eMF_2;
+[Serializable]
+class InvalidTapeMatrixLinesCount : Exception {
+    public InvalidTapeMatrixLinesCount() {  }
+}
+
+class InvalidMatrixIndeces : Exception {
+    public InvalidMatrixIndeces() {  }
+}
 
 interface IMatrix { 
     public double ByIndex(uint i, uint j);
@@ -20,10 +28,14 @@ public class TapeMatrix : IMatrix {
     /// </summary>
     public TapeMatrix(uint dimension, uint lines) {
         if (lines % 2 == 0) {
-            throw "Число диагоналей должно быть нечётным.";
+            throw new InvalidTapeMatrixLinesCount();
         }
 
-        RawData = new double[dimensions][lines];
+        RawData = new double[dimension][];
+        for(uint i = 0; i < lines; i++) {
+            RawData[i] = new double[lines];
+        }
+
         Dimension = dimension;
         Lines = lines;
     }
@@ -34,10 +46,10 @@ public class TapeMatrix : IMatrix {
     /// </summary>
     public double ByIndex(uint i, uint j) {
         if (i > Dimension || j > Dimension) {
-            throw "У матрицы нет элемента с такими индексами.";
+            throw new InvalidMatrixIndeces();
         }
 
-        if (Abs(i - j) > Lines / 2) {
+        if (Math.Abs(i - j) > Lines / 2) {
             return 0.0;
         }
 
