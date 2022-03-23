@@ -1,4 +1,4 @@
-namespace eMF_2;
+namespace eMP_2;
 [Serializable]
 class InvalidTapeMatrixLinesCount : Exception {
     public InvalidTapeMatrixLinesCount() {  }
