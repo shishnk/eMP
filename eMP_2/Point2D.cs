@@ -1,4 +1,4 @@
-namespace eMF_2;
+namespace eMP_2;
 
 public readonly record struct Point2D(double X, double Y) {
     public static Point2D Parse(string points) {
