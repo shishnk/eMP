@@ -1,4 +1,4 @@
-namespace eMF_2;
+namespace eMP_2;
 
 public record struct Element {
     public double LeftBorder { get; init; }
