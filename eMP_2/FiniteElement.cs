@@ -1,6 +1,6 @@
 namespace eMP_2;
 
-public class FiniteElement {
+public readonly record struct FiniteElement {
     public Interval Interval { get; init; }
 
     public FiniteElement(Interval interval)
