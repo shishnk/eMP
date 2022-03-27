@@ -1,13 +1,39 @@
 namespace eMP_2;
 
 public class SpaceNestedGrid : Grid {
-    public override Interval Interval { get => throw new NotImplementedException(); init => throw new NotImplementedException(); }
+    private double[]? _points;
+    public override ImmutableArray<double>? Points => _points?.ToImmutableArray();
 
-    public override ImmutableList<double> AllLinesX => throw new NotImplementedException();
+     public SpaceNestedGrid(GridParameters gridParameters) {
+        Build(gridParameters);
+    }
 
-    public override ImmutableList<Point2D> Points => throw new NotImplementedException();
+    protected override void Build(GridParameters gridParameters) {
+        try {
+            ArgumentNullException.ThrowIfNull(gridParameters.K, $"{nameof(gridParameters.K)} cannot be null");
 
-    public override void Build() {
-        throw new NotImplementedException();
+            _points = new double[gridParameters.Splits + 1];
+            double h;
+            double sum = 0;
+            double coef = Math.Sqrt((double)gridParameters.K);
+
+            for (int k = 0; k < gridParameters.Splits; k++)
+                sum += Math.Pow(coef, k);
+
+            h = gridParameters.Interval.Lenght / sum;
+            _points[0] = gridParameters.Interval.LeftBorder;
+            _points[^1] = gridParameters.Interval.RightBorder;
+
+            int index = 1;
+
+            while (_points[index] != gridParameters.Interval.RightBorder) {
+                _points[index] = _points[index - 1] + h;
+                h *= (double)gridParameters.K;
+                index++;
+            }
+
+        } catch (Exception ex) {
+            Console.WriteLine($"We had problem: {ex.Message}");
+        }
     }
 }

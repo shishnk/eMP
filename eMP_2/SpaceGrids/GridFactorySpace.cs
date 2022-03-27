@@ -1,14 +1,15 @@
 namespace eMP_2;
-    public class GridFactorySpace : GridFactory {
-        protected override Grid CreateGrid(GridType spaceGridType) {
-            return spaceGridType switch {
-                GridType.SpaceRegular => new SpaceRegularGrid(),
 
-                GridType.SpaceIrregular => new SpaceIrregularGrid(),
+public class GridFactorySpace : GridFactory {
+    public override Grid CreateGrid(GridType spaceGridType, GridParameters gridParameters) {
+        return spaceGridType switch {
+            GridType.SpaceRegular => new SpaceRegularGrid(gridParameters),
 
-                GridType.SpaceNested => new SpaceNestedGrid(),
+            GridType.SpaceIrregular => new SpaceIrregularGrid(gridParameters),
 
-                 _ => throw new ArgumentOutOfRangeException(nameof(spaceGridType), $"This type of grid does not exist: {spaceGridType}"),
-            };
-        }
+            GridType.SpaceNested => new SpaceNestedGrid(gridParameters),
+
+            _ => throw new ArgumentOutOfRangeException(nameof(spaceGridType), $"This type of grid does not exist: {spaceGridType}"),
+        };
     }
+}
