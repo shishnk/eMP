@@ -3,12 +3,12 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>disable</Nullable>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
     <Using Include="Newtonsoft.Json"/>
     <Using Include="Newtonsoft.Json.Linq"/>
-    <Using Include="Microsoft.Scripting.Hosting"/>
+    <Using Include="System.Collections.Immutable"/>
     <PackageReference Include="Json.Net" Version="1.0.33"/>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1"/>
   </ItemGroup>
