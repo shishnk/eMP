@@ -1,13 +1,32 @@
 namespace eMP_2;
 
 public class TimeRegularGrid : Grid {
-    public override Interval Interval { get => throw new NotImplementedException(); init => throw new NotImplementedException(); }
+    private double[]? _points;
+    public override ImmutableArray<double>? Points => _points?.ToImmutableArray();
 
-    public override ImmutableList<double> AllLinesX => throw new NotImplementedException();
+    public TimeRegularGrid(GridParameters gridParameters) {
+        Build(gridParameters);
+    }
 
-    public override ImmutableList<Point2D> Points => throw new NotImplementedException();
+    protected override void Build(GridParameters gridParameters) {
+        try {
+            if (gridParameters.Interval.LeftBorder < 0)
+                throw new Exception("The beginning of the time segment cannot be less than 0");
 
-    public override void Build() {
-        throw new NotImplementedException();
+            _points = new double[gridParameters.Splits + 1];
+            double h = gridParameters.Interval.Lenght / gridParameters.Splits;
+
+            _points[0] = gridParameters.Interval.LeftBorder;
+            _points[^1] = gridParameters.Interval.RightBorder;
+            int index = 1;
+
+            while (_points[index] != gridParameters.Interval.RightBorder) {
+                _points[index] = _points[index - 1] + h;
+                index++;
+            }
+
+        } catch (Exception ex) {
+            Console.WriteLine($"We had problem: {ex.Message}");
+        }
     }
 }
