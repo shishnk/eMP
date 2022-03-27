@@ -1,6 +1,6 @@
 namespace eMP_2;
 
-public enum GridType {
+public enum GridTypes {
     SpaceRegular,
     SpaceIrregular,
     SpaceNested,
@@ -10,5 +10,5 @@ public enum GridType {
 }
 
 public abstract class GridFactory {
-    public abstract Grid CreateGrid(GridType gridType, GridParameters gridParameters);
+    public abstract IGrid CreateGrid(GridTypes gridType, GridParameters gridParameters);
 }
