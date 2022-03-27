@@ -1,32 +1,45 @@
 namespace eMP_2;
 
-public class MFE
-{
-    private ITest _test;
-    private ISolver _solver;
+public class MFE {
+    public class MFEBuilder {
+        private readonly MFE _mfe;
 
-    public MFE() { }
+        public MFEBuilder()
+            => _mfe = new();
 
-
-    public void Compute()
-    {
-        try
-        {
-            if (_test is null)
-                throw new Exception("Set the test!");
-
-            if (_solver is null)
-                throw new Exception("Set the method of solving SLAE!");
+        public MFEBuilder SetTest(ITest test) {
+            _mfe._test = test;
+            return this;
         }
-        catch (Exception ex)
-        {
+
+        public MFEBuilder SetGrid(Grid grid) {
+            _mfe._grid = grid;
+            return this;
+        }
+
+        public MFEBuilder SetMethod(ISolver solver) {
+            _mfe._solver = solver;
+            return this;
+        }
+
+        public static implicit operator MFE(MFEBuilder builder)
+            => builder._mfe;
+    }
+
+    private ITest? _test;
+    private ISolver? _solver;
+    private Grid? _grid;
+
+    public void Compute() {
+        try {
+            ArgumentNullException.ThrowIfNull(_test, $"{nameof(_test)} cannot be null, set the test");
+            ArgumentNullException.ThrowIfNull(_solver, $"{nameof(_solver)} cannot be null, set the method of solving SLAE");
+
+        } catch (Exception ex) {
             Console.WriteLine(ex.Message);
         }
     }
 
-    public void SetTest(ITest test)
-        => _test = test;
-
-    public void SetMethodSolvingSLAE(ISolver solver)
-        => _solver = solver;
+    public static MFEBuilder CreateBuilder()
+        => new();
 }
