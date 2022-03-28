@@ -16,4 +16,13 @@ public static class QuadraticBasis {
 
     public static double Psi3(double x)
         => 2 * x * (x - 0.5);
+
+    public static double DPsi1(double x)
+        => 4 * x - 3;
+
+    public static double DPsi2(double x)
+        => -8 * x + 4;
+
+    public static double DPsi3(double x)
+        => 4 * x - 1;
 }
