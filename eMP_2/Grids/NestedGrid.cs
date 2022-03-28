@@ -1,12 +1,11 @@
 namespace eMP_2;
 
 public abstract class NestedGrid : IGrid {
-    private double[]? _points;
+    private double[] _points = default!;
     public abstract bool TimeDependent { get; }
-    public ImmutableArray<double>? Points => _points?.ToImmutableArray();
+    public ImmutableArray<double> Points => _points.ToImmutableArray();
 
-    protected NestedGrid(GridParameters gridParameters)
-        => Build(gridParameters);
+    protected NestedGrid(GridParameters gridParameters) => Build(gridParameters);
 
     private void Build(GridParameters gridParameters) {
         try {
@@ -18,7 +17,7 @@ public abstract class NestedGrid : IGrid {
 
             ArgumentNullException.ThrowIfNull(gridParameters.K, $"{nameof(gridParameters.K)} cannot be null");
 
-            _points = new double[2 * gridParameters.Splits + 1];
+            _points = new double[gridParameters.Splits + 1];
             double h;
             double sum = 0;
             double coef = Math.Sqrt((double)gridParameters.K);
@@ -30,17 +29,13 @@ public abstract class NestedGrid : IGrid {
             _points[0] = gridParameters.Interval.LeftBorder;
             _points[^1] = gridParameters.Interval.RightBorder;
 
-            int index = 2;
+            int index = 1;
 
             while (_points[index] != gridParameters.Interval.RightBorder) {
-                _points[index] = _points[index - 2] + h;
+                _points[index] = _points[index - 1] + h;
                 h *= (double)gridParameters.K;
                 index++;
             }
-
-            for (int i = 1; i < _points.Length; i++)
-                if (_points[i] == 0)
-                    _points[i] = (_points[i + 1] + _points[i - 1]) / 2;
 
         } catch (Exception ex) {
             Console.WriteLine($"We had problem: {ex.Message}");
