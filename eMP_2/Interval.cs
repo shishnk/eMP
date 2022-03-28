@@ -17,8 +17,12 @@ public class IntervalConverter : JsonConverter {
         writer.WriteEndObject();
     }
 
-    public override object ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer) {
+    public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer) {
+        if (reader.TokenType == JsonToken.Null || reader.TokenType != JsonToken.StartObject)
+            return null;
+
         Interval value;
+        
         var maintoken = JObject.Load(reader);
 
         var token = maintoken["Left border"];
