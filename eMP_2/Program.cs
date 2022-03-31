@@ -1,25 +1,13 @@
 ﻿using eMP_2;
 
-GridParameters? timeGridParameters;
-GridParameters? spaceGridParameters;
+GridParameters? spaceGridParameters = GridParameters.ReadJson("spaceGrid.json");
+GridParameters? timeGridParameters = GridParameters.ReadJson("timeGrid.json");
 
-try {
-    var sr = new StreamReader("timeGrid.json");
-    using (sr) {
-        timeGridParameters = JsonConvert.DeserializeObject<GridParameters>(sr.ReadToEnd());
-    }
-    sr = new StreamReader("spaceGrid.json");
-    using (sr) {
-        spaceGridParameters = JsonConvert.DeserializeObject<GridParameters>(sr.ReadToEnd());
-    }
+GridFactorySpace gridFactorySpace = new();
+GridFactoryTime gridFactoryTime = new();
 
-    GridFactorySpace gridFactorySpace = new();
-    GridFactoryTime gridFactoryTime = new();
-    var grid1 =gridFactorySpace.CreateGrid(GridType.SpaceIrregular, spaceGridParameters!);
-    var grid2 = gridFactoryTime.CreateGrid(GridType.TimeIrregular, timeGridParameters!);
-    
-} catch (Exception ex) {
-    Console.WriteLine(ex.Message);
-}
+IGrid spaceGrid = gridFactorySpace.CreateGrid(GridTypes.SpaceRegular, spaceGridParameters!);
+IGrid timeGrid = gridFactoryTime.CreateGrid(GridTypes.TimeRegular, timeGridParameters!);
 
-Console.WriteLine();
+MFE mfe = MFE.CreateBuilder().SetSpaceGrid(spaceGrid).SetTimeGrid(timeGrid).SetTest(new FirstTest());
+mfe.Compute();
