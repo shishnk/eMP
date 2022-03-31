@@ -103,19 +103,19 @@ public class MFE {
             // |  x   x+1  x+1  |
             // |  x   x+1  x+2  |
 
-            int x = ielem * 2;
+            int index = ielem * 2;
 
-            _globalMatrix.Diags[0][x] += _stiffnessMatrix[0, 0];
-            _globalMatrix.Diags[0][x + 1] += _stiffnessMatrix[1, 1];
-            _globalMatrix.Diags[0][x + 2] += _stiffnessMatrix[2, 2];
+            _globalMatrix.Diags[0][index] += _stiffnessMatrix[0, 0];
+            _globalMatrix.Diags[0][index + 1] += _stiffnessMatrix[1, 1];
+            _globalMatrix.Diags[0][index + 2] += _stiffnessMatrix[2, 2];
 
-            _globalMatrix.Diags[1][x] += _stiffnessMatrix[1, 0];
-            _globalMatrix.Diags[1][x + 1] += _stiffnessMatrix[2, 0];
-            _globalMatrix.Diags[2][x] += _stiffnessMatrix[2, 1];
+            _globalMatrix.Diags[1][index] += _stiffnessMatrix[1, 0];
+            _globalMatrix.Diags[1][index + 1] += _stiffnessMatrix[2, 1];
+            _globalMatrix.Diags[2][index] += _stiffnessMatrix[2, 0];
 
-            _globalMatrix.Diags[3][x] += _stiffnessMatrix[0, 1];
-            _globalMatrix.Diags[3][x + 1] += _stiffnessMatrix[0, 2];
-            _globalMatrix.Diags[4][x] += _stiffnessMatrix[1, 2];
+            _globalMatrix.Diags[3][index] += _stiffnessMatrix[0, 1];
+            _globalMatrix.Diags[3][index + 1] += _stiffnessMatrix[1, 2];
+            _globalMatrix.Diags[4][index] += _stiffnessMatrix[0, 2];
 
             _stiffnessMatrix.Clear();
             _massMatrix?.Clear();
@@ -126,11 +126,11 @@ public class MFE {
         for (int ielem = 0; ielem < _elements.Length; ielem++) {
             AssemblyLocalVector(ielem);
 
-            int x = ielem * 2; // [ x, x+1, x+2 ]^T
+            int index = ielem * 2; // [ index, index+1, index+2 ]^T
 
-            _vector[x] += _localVector[0];
-            _vector[x + 1] += _localVector[1];
-            _vector[x + 2] += _localVector[2];
+            _vector[index] += _localVector[0];
+            _vector[index + 1] += _localVector[1];
+            _vector[index + 2] += _localVector[2];
 
             Array.Clear(_localVector);
         }
