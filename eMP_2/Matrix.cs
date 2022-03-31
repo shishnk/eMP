@@ -1,58 +1,29 @@
 namespace eMP_2;
-[Serializable]
-class InvalidTapeMatrixLinesCount : Exception {
-    public InvalidTapeMatrixLinesCount() {  }
-}
 
-class InvalidMatrixIndeces : Exception {
-    public InvalidMatrixIndeces() {  }
-}
+public class Matrix {
+    private double[,] storage;
+    public int Size { get; init; }
 
-interface IMatrix { 
-    public double ByIndex(uint i, uint j);
-}
-
-/// <summary>
-/// Класс <c>TapeMatrix</c> используется для создания матрицы
-/// с ленточным форматом хранения элементов.
-/// </summary>
-public class TapeMatrix : IMatrix {
-    public double[][] RawData { get; private set; }
-    public uint Dimension { get; init; }
-    public uint Lines { get; init; }
-
-    /// <summary>
-    /// Конструктор в качестве аргументов принимает размерности матрицы <c>dimension</c> и
-    /// количество лент <c>lines</c>, которое должно быть нечётным числом.
-    /// Матрица хранится по строкам.
-    /// </summary>
-    public TapeMatrix(uint dimension, uint lines) {
-        if (lines % 2 == 0) {
-            throw new InvalidTapeMatrixLinesCount();
-        }
-
-        RawData = new double[dimension][];
-        for(uint i = 0; i < lines; i++) {
-            RawData[i] = new double[lines];
-        }
-
-        Dimension = dimension;
-        Lines = lines;
+    public double this[int i, int j] {
+        get => storage[i, j];
+        set => storage[i, j] = value;
     }
 
-    /// <summary>
-    /// Метод <c>ByIndex</c> возвращает элемент матрицы по индексам как если бы она была плотной.
-    /// Первый аргумент <c>i</c> - строка, второй <c>j</c> - столбец, индексация с нуля.
-    /// </summary>
-    public double ByIndex(uint i, uint j) {
-        if (i > Dimension || j > Dimension) {
-            throw new InvalidMatrixIndeces();
-        }
+    public Matrix(int size) {
+        storage = new double[size, size];
+        Size = size;
+    }
 
-        if (Math.Abs(i - j) > Lines / 2) {
-            return 0.0;
-        }
+    public void Clear()
+        => Array.Clear(storage, 0, storage.Length);
 
-        return RawData[i][j - i + 1];
+    public static Matrix operator +(Matrix fstMatrix, Matrix sndMatrix) {
+        Matrix resultMatrix = new(fstMatrix.Size);
+
+        for (int i = 0; i < resultMatrix.Size; i++)
+            for (int j = 0; j < resultMatrix.Size; j++)
+                resultMatrix[i, j] = fstMatrix[i, j] + sndMatrix[i, j];
+
+        return resultMatrix;
     }
 }
