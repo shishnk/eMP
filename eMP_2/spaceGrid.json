@@ -1,8 +1,9 @@
 {
     "Initial area": {
-        "Left border": 1.0,
+        "Left border": 0.0,
         "Right border": 2.0
     },
-    "Number of splits": 3,
-    "Coef": 2.0
+    "Number of splits": 2,
+    "Coef": 2.0,
+    "Sigma": 1.0
 }
