@@ -22,10 +22,10 @@ public class MFE {
             return this;
         }
 
-        public MFEBuilder SetMethod(ISolver solver) {
-            _mfe._solver = solver;
-            return this;
-        }
+        //public MFEBuilder SetMethod(ISolver solver) {
+        //    _mfe._solver = solver;
+        //    return this;
+        //}
 
         public static implicit operator MFE(MFEBuilder builder)
             => builder._mfe;
@@ -37,7 +37,7 @@ public class MFE {
     private Basis[] _basis = default!;
     private Basis[] _dBasis = default!;
     private ITest _test = default!;
-    private ISolver _solver = default!;
+    //private ISolver _solver = default!;
     private IGrid _spaceGrid = default!;
     private IGrid _timeGrid = default!;
     private Matrix? _massMatrix; // матрица масс
@@ -54,7 +54,6 @@ public class MFE {
             // ArgumentNullException.ThrowIfNull(_solver, $"{nameof(_solver)} cannot be null, set the method of solving SLAE");
 
             Init();
-            AssemblyLocalVector(2);
             AssemblyGlobalMatrix();
             AssemblyGlobalVector();
 
@@ -94,6 +93,23 @@ public class MFE {
     private void AssemblyGlobalMatrix() {
         for (int ielem = 0; ielem < _elements.Length; ielem++) {
             AssemblyLocalMatrices(ielem);
+            // |  x    x    x   |
+            // |  x   x+1  x+1  |
+            // |  x   x+1  x+2  |
+
+            int x = ielem * 2 + 1;
+
+            _globalMatrix.Diags[0][x] += _stiffnessMatrix[0, 0];
+            _globalMatrix.Diags[0][x + 1] += _stiffnessMatrix[1, 1];
+            _globalMatrix.Diags[0][x + 2] += _stiffnessMatrix[2, 2];
+
+            _globalMatrix.Diags[1][x] += _stiffnessMatrix[1, 0];
+            _globalMatrix.Diags[2][x] += _stiffnessMatrix[2, 0];
+            _globalMatrix.Diags[2][x + 1] += _stiffnessMatrix[2, 1];
+
+            _globalMatrix.Diags[3][x] += _stiffnessMatrix[0, 1];
+            _globalMatrix.Diags[4][x] += _stiffnessMatrix[0, 2];
+            _globalMatrix.Diags[4][x + 1] += _stiffnessMatrix[1, 2];
 
             _stiffnessMatrix.Clear();
             _massMatrix?.Clear();
@@ -102,7 +118,11 @@ public class MFE {
 
     private void AssemblyGlobalVector() {
         for (int ielem = 0; ielem < _elements.Length; ielem++) {
+            int x = ielem * 2; // [ x, x+1, x+2 ]^T
 
+            _vector[x] += _localVector[0];
+            _vector[x + 1] += _localVector[1];
+            _vector[x + 2] += _localVector[2];
 
             Array.Clear(_localVector);
         }
