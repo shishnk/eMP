@@ -56,6 +56,7 @@ public class MFE {
             Init();
             AssemblyGlobalMatrix();
             AssemblyGlobalVector();
+            Console.WriteLine(".");
 
 
         } catch (Exception ex) {
@@ -64,17 +65,22 @@ public class MFE {
     }
 
     private void Init() {
-        _massMatrix = (_spaceGrid.Sigma is not null) ? new(3) : null;
+        // _massMatrix = (_spaceGrid.Sigma is not null || _spaceGrid.Sigma != 0) ? new(3) : null;
         _stiffnessMatrix = new(3);
-        _globalMatrix = new(_spaceGrid.Points.Length);
+        _globalMatrix = new(7);
         _vector = new double[7];
         _localVector = new double[3];
         _basis = new Basis[] { QuadraticBasis.Psi1, QuadraticBasis.Psi2, QuadraticBasis.Psi3 };
         _dBasis = new Basis[] { QuadraticBasis.DPsi1, QuadraticBasis.DPsi2, QuadraticBasis.DPsi3 };
-        _elements = new FiniteElement[_spaceGrid.Points.Length - 1];
+        //_elements = new FiniteElement[_spaceGrid.Points.Length - 1];
 
-        for (int ielem = 0, index = 0; ielem < _elements.Length; ielem++, index++) // формирование конечных элементов
-            _elements[ielem] = new(new(_spaceGrid.Points[index], _spaceGrid.Points[index + 1]));
+        //for (int ielem = 0, index = 0; ielem < _elements.Length; ielem++, index++) // формирование конечных элементов
+        //    _elements[ielem] = new(new(_spaceGrid.Points[index], _spaceGrid.Points[index + 1]));
+
+        _elements = new FiniteElement[3];
+        _elements[0] = new FiniteElement(new Interval(0, 2));
+        _elements[1] = new FiniteElement(new Interval(2, 3));
+        _elements[2] = new FiniteElement(new Interval(3, 7));
     }
 
     private void AssemblyLocalMatrices(int ielem) {
@@ -97,19 +103,19 @@ public class MFE {
             // |  x   x+1  x+1  |
             // |  x   x+1  x+2  |
 
-            int x = ielem * 2 + 1;
+            int x = ielem * 2;
 
             _globalMatrix.Diags[0][x] += _stiffnessMatrix[0, 0];
             _globalMatrix.Diags[0][x + 1] += _stiffnessMatrix[1, 1];
             _globalMatrix.Diags[0][x + 2] += _stiffnessMatrix[2, 2];
 
             _globalMatrix.Diags[1][x] += _stiffnessMatrix[1, 0];
-            _globalMatrix.Diags[2][x] += _stiffnessMatrix[2, 0];
-            _globalMatrix.Diags[2][x + 1] += _stiffnessMatrix[2, 1];
+            _globalMatrix.Diags[1][x + 1] += _stiffnessMatrix[2, 0];
+            _globalMatrix.Diags[2][x] += _stiffnessMatrix[2, 1];
 
             _globalMatrix.Diags[3][x] += _stiffnessMatrix[0, 1];
-            _globalMatrix.Diags[4][x] += _stiffnessMatrix[0, 2];
-            _globalMatrix.Diags[4][x + 1] += _stiffnessMatrix[1, 2];
+            _globalMatrix.Diags[3][x + 1] += _stiffnessMatrix[0, 2];
+            _globalMatrix.Diags[4][x] += _stiffnessMatrix[1, 2];
 
             _stiffnessMatrix.Clear();
             _massMatrix?.Clear();
@@ -118,6 +124,8 @@ public class MFE {
 
     private void AssemblyGlobalVector() {
         for (int ielem = 0; ielem < _elements.Length; ielem++) {
+            AssemblyLocalVector(ielem);
+
             int x = ielem * 2; // [ x, x+1, x+2 ]^T
 
             _vector[x] += _localVector[0];
@@ -131,12 +139,16 @@ public class MFE {
     private void AssemblyLocalVector(int ielem) {
         double[] elementPoints = new double[3];
 
+        //elementPoints[0] = _elements[ielem].Interval.LeftBorder;
+        //elementPoints[1] = _elements[ielem].Interval.Center;
+        //elementPoints[2] = _elements[ielem].Interval.RightBorder;
+
         elementPoints[0] = _elements[ielem].Interval.LeftBorder;
         elementPoints[1] = _elements[ielem].Interval.Center;
         elementPoints[2] = _elements[ielem].Interval.RightBorder;
 
         for (int i = 0; i < _localVector.Length; i++)
-            _localVector[i] = _elements[ielem].Interval.Lenght * _test.F(elementPoints[i]) * _integration.GaussOrder5(_basis[i], 0, 1);
+            _localVector[i] = _elements[ielem].Interval.Lenght * _test.F(ielem, elementPoints[i]) * _integration.GaussOrder5(_basis[i], 0, 1);
 
         /* заполнение локального вектора возможно через матрицу масс(разложения компонентов на линейный интерполянт), 
         но если в программе задать коэффициент перед ней нуль, то придется инициализировать ручками компоненты матрицы масс
