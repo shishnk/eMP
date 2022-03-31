@@ -17,17 +17,35 @@ public class Integration {
         _weights[2] = 5.0 / 9.0;
     }
 
-    public double GaussOrder5(MFE.Basis PsiI, MFE.Basis PsiJ) {
+    public double GaussOrder5(MFE.Basis PsiI, MFE.Basis PsiJ, double a, double b) {
         double qi, pi;
         double result = 0;
 
+        double h = Math.Abs(b - a);
+
         for (int i = 0; i < 3; i++) {
             qi = _weights[i];
-            pi = (1 + _points[i]) / 2.0;
+            pi = (a + b + _points[i] * h) / 2.0;
 
             result += qi * PsiI(pi) * PsiJ(pi);
         }
 
-        return result / 2.0;
+        return result * h / 2.0;
+    }
+
+    public double GaussOrder5(MFE.Basis Psi, double a, double b) {
+        double qi, pi;
+        double result = 0;
+
+        double h = Math.Abs(b - a);
+
+        for (int i = 0; i < 3; i++) {
+            qi = _weights[i];
+            pi = (a + b + _points[i] * h) / 2.0;
+
+            result += qi * Psi(pi);
+        }
+
+        return result * h / 2.0;
     }
 }
