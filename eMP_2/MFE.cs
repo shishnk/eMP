@@ -22,10 +22,10 @@ public class MFE {
             return this;
         }
 
-        //public MFEBuilder SetMethod(ISolver solver) {
-        //    _mfe._solver = solver;
-        //    return this;
-        //}
+        public MFEBuilder SetMethod(ISolver solver) {
+            _mfe._solver = solver;
+            return this;
+        }
 
         public static implicit operator MFE(MFEBuilder builder)
             => builder._mfe;
@@ -37,7 +37,7 @@ public class MFE {
     private Basis[] _basis = default!;
     private Basis[] _dBasis = default!;
     private ITest _test = default!;
-    //private ISolver _solver = default!;
+    private ISolver _solver = default!;
     private IGrid _spaceGrid = default!;
     private IGrid _timeGrid = default!;
     private Matrix? _massMatrix; // матрица масс
@@ -65,22 +65,17 @@ public class MFE {
     }
 
     private void Init() {
-        // _massMatrix = (_spaceGrid.Sigma is not null || _spaceGrid.Sigma != 0) ? new(3) : null;
+        _massMatrix = (_spaceGrid.Sigma.HasValue && _spaceGrid.Sigma != 0) ? new(3) : null;
         _stiffnessMatrix = new(3);
         _globalMatrix = new(7);
         _vector = new double[7];
         _localVector = new double[3];
         _basis = new Basis[] { QuadraticBasis.Psi1, QuadraticBasis.Psi2, QuadraticBasis.Psi3 };
         _dBasis = new Basis[] { QuadraticBasis.DPsi1, QuadraticBasis.DPsi2, QuadraticBasis.DPsi3 };
-        //_elements = new FiniteElement[_spaceGrid.Points.Length - 1];
+        _elements = new FiniteElement[_spaceGrid.Points.Length - 1];
 
-        //for (int ielem = 0, index = 0; ielem < _elements.Length; ielem++, index++) // формирование конечных элементов
-        //    _elements[ielem] = new(new(_spaceGrid.Points[index], _spaceGrid.Points[index + 1]));
-
-        _elements = new FiniteElement[3];
-        _elements[0] = new FiniteElement(new Interval(0, 2));
-        _elements[1] = new FiniteElement(new Interval(2, 3));
-        _elements[2] = new FiniteElement(new Interval(3, 7));
+        for (int ielem = 0, index = 0; ielem < _elements.Length; ielem++, index++) // формирование конечных элементов
+            _elements[ielem] = new(new(_spaceGrid.Points[index], _spaceGrid.Points[index + 1]));
     }
 
     private void AssemblyLocalMatrices(int ielem) {
@@ -99,9 +94,9 @@ public class MFE {
     private void AssemblyGlobalMatrix() {
         for (int ielem = 0; ielem < _elements.Length; ielem++) {
             AssemblyLocalMatrices(ielem);
-            // |  x    x    x   |
-            // |  x   x+1  x+1  |
-            // |  x   x+1  x+2  |
+            // |  index   index    index    |
+            // |  index   index+1  index+1  |
+            // |  index   index+1  index+2  |
 
             int index = ielem * 2;
 
@@ -139,16 +134,12 @@ public class MFE {
     private void AssemblyLocalVector(int ielem) {
         double[] elementPoints = new double[3];
 
-        //elementPoints[0] = _elements[ielem].Interval.LeftBorder;
-        //elementPoints[1] = _elements[ielem].Interval.Center;
-        //elementPoints[2] = _elements[ielem].Interval.RightBorder;
-
         elementPoints[0] = _elements[ielem].Interval.LeftBorder;
         elementPoints[1] = _elements[ielem].Interval.Center;
         elementPoints[2] = _elements[ielem].Interval.RightBorder;
 
         for (int i = 0; i < _localVector.Length; i++)
-            _localVector[i] = _elements[ielem].Interval.Lenght * _test.F(ielem, elementPoints[i]) * _integration.GaussOrder5(_basis[i], 0, 1);
+            _localVector[i] = _elements[ielem].Interval.Lenght * _test.F(elementPoints[i]) * _integration.GaussOrder5(_basis[i], 0, 1);
 
         /* заполнение локального вектора возможно через матрицу масс(разложения компонентов на линейный интерполянт), 
         но если в программе задать коэффициент перед ней нуль, то придется инициализировать ручками компоненты матрицы масс
