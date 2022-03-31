@@ -2,10 +2,14 @@ namespace eMP_2;
 
 public abstract class RegularGrid : IGrid {
     private double[] _points = default!;
+    public double? Sigma { get; init; }
     public abstract bool TimeDependent { get; }
     public ImmutableArray<double> Points => _points.ToImmutableArray();
 
-    protected RegularGrid(GridParameters gridParameters) => Build(gridParameters);
+    protected RegularGrid(GridParameters gridParameters) {
+        Sigma = gridParameters.Sigma;
+        Build(gridParameters);
+    }
 
     private void Build(GridParameters gridParameters) {
         if (TimeDependent == true && gridParameters.Interval.LeftBorder < 0)

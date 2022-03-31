@@ -2,10 +2,14 @@ namespace eMP_2;
 
 public abstract class NestedGrid : IGrid {
     private double[] _points = default!;
+    public double? Sigma { get; init; }
     public abstract bool TimeDependent { get; }
     public ImmutableArray<double> Points => _points.ToImmutableArray();
 
-    protected NestedGrid(GridParameters gridParameters) => Build(gridParameters);
+    protected NestedGrid(GridParameters gridParameters) {
+        Sigma = gridParameters.Sigma;
+        Build(gridParameters);
+    }
 
     private void Build(GridParameters gridParameters) {
         try {

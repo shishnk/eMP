@@ -2,10 +2,14 @@ namespace eMP_2;
 
 public abstract class IrregularGrid : IGrid {
     private double[] _points = default!;
+    public double? Sigma { get; init; }
     public abstract bool TimeDependent { get; }
     public ImmutableArray<double> Points => _points.ToImmutableArray();
 
-    protected IrregularGrid(GridParameters gridParameters) => Build(gridParameters);
+    protected IrregularGrid(GridParameters gridParameters) {
+        Sigma = gridParameters.Sigma;
+        Build(gridParameters);
+    }
 
     private void Build(GridParameters gridParameters) {
         try {
@@ -33,7 +37,7 @@ public abstract class IrregularGrid : IGrid {
             while (_points[index] != gridParameters.Interval.RightBorder) {
                 _points[index] = _points[index - 1] + h;
                 h *= (double)gridParameters.K;
-                index ++;
+                index++;
             }
 
         } catch (Exception ex) {
