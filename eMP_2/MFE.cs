@@ -22,7 +22,7 @@ public class MFE {
             return this;
         }
 
-        public MFEBuilder SetMethod(ISolver solver) {
+        public MFEBuilder SetMethod(Decomposer solver) {
             _mfe._solver = solver;
             return this;
         }
@@ -37,27 +37,30 @@ public class MFE {
     private Basis[] _basis = default!;
     private Basis[] _dBasis = default!;
     private ITest _test = default!;
-    private ISolver _solver = default!;
+    private Decomposer _solver = default!;
     private IGrid _spaceGrid = default!;
     private IGrid _timeGrid = default!;
     private Matrix? _massMatrix; // матрица масс
     private Matrix _stiffnessMatrix = default!; // матрица жесткости
     private DiagMatrix _globalMatrix = default!;
     private FiniteElement[] _elements = default!;
-    private double[] _weights = default!; // вектор весов
     private double[] _localVector = default!;
     private double[] _vector = default!; // вектор правой части
 
     public void Compute() {
-        try { // не забыть раскомментировать!
-            // ArgumentNullException.ThrowIfNull(_test, $"{nameof(_test)} cannot be null, set the test"); 
-            // ArgumentNullException.ThrowIfNull(_solver, $"{nameof(_solver)} cannot be null, set the method of solving SLAE");
+        try {
+            ArgumentNullException.ThrowIfNull(_test, $"{nameof(_test)} cannot be null, set the test"); 
+            ArgumentNullException.ThrowIfNull(_solver, $"{nameof(_solver)} cannot be null, set the method of solving SLAE");
 
             Init();
             AssemblyGlobalMatrix();
             AssemblyGlobalVector();
-            Console.WriteLine(".");
+            _solver.SetMatrix(_globalMatrix);
+            _solver.SetVector(_vector);
+            // _solver.Compute();
 
+            // foreach (var weight in _solver.Solution!)
+                // Console.WriteLine(weight);
 
         } catch (Exception ex) {
             Console.WriteLine($"We had problem: {ex.Message}");
@@ -67,8 +70,8 @@ public class MFE {
     private void Init() {
         _massMatrix = (_spaceGrid.Sigma.HasValue && _spaceGrid.Sigma != 0) ? new(3) : null;
         _stiffnessMatrix = new(3);
-        _globalMatrix = new(7);
-        _vector = new double[7];
+        _globalMatrix = new(2 * _spaceGrid.Points.Length - 1);
+        _vector = new double[_globalMatrix.Size];
         _localVector = new double[3];
         _basis = new Basis[] { QuadraticBasis.Psi1, QuadraticBasis.Psi2, QuadraticBasis.Psi3 };
         _dBasis = new Basis[] { QuadraticBasis.DPsi1, QuadraticBasis.DPsi2, QuadraticBasis.DPsi3 };
