@@ -26,19 +26,17 @@ public class DecomposerLU : Decomposer {
     }
 
     private void LU() {
-        double sumL = 0.0, sumU = 0.0, sumD = 0.0;
-
         // We walk through diagonal elements
         for (int idx = 0; idx < _matrix.Size; idx++) {
             // Then we walk through row and column (except not-in-matrix elements)
             for (int offset = 0; offset < _matrix.ColumnCount; offset++) {
-                if (idx + offset < _matrix.ColumnCount) {
+                if (idx + offset < _matrix.ColumnCount)
                     continue;
-                }
 
-                sumL = 0.0; sumU = 0.0;
+                double sumL = 0.0; 
+                double sumU = 0.0;
 
-                int idx2 = idx -_matrix.ColumnCount + offset;
+                int idx2 = idx - _matrix.ColumnCount + offset;
 
                 // sum compution
                 for (int ik = 0; ik < offset; ik++) {
@@ -52,16 +50,14 @@ public class DecomposerLU : Decomposer {
                 _matrix.Upper[idx][offset] = (_matrix.Upper[idx][offset] - sumU) / _matrix.Diagonal[idx2];
             }
 
-            sumD = 0.0;
+            double sumD = 0.0;
 
             // And then we change our diagonal
-            for (int offset = 0; offset < _matrix.ColumnCount; offset++) {
+            for (int offset = 0; offset < _matrix.ColumnCount; offset++)
                 sumD += _matrix.Lower[idx][offset] * _matrix.Upper[idx][offset];
-            }
 
             _matrix.Diagonal[idx] -= sumD;
         }
-
     }
 
     private void ForwardElimination() {
@@ -69,9 +65,8 @@ public class DecomposerLU : Decomposer {
             double sumY = 0.0;
 
             for (int j = 0; j < _matrix.ColumnCount; j++) {
-                if (i + j < _matrix.ColumnCount) {
+                if (i + j < _matrix.ColumnCount)
                     continue;
-                }
 
                 sumY += _matrix.Lower[i][j] * _vector[i - _matrix.ColumnCount + j];
             }
@@ -83,9 +78,8 @@ public class DecomposerLU : Decomposer {
     private void BackSubstitution() {
         for (int i = _matrix.Size - 1; i >= 0; i--) {
             for (int j = _matrix.ColumnCount - 1; j >= 0; j--) {
-                if (i + j < _matrix.ColumnCount) {
+                if (i + j < _matrix.ColumnCount)
                     continue;
-                }
 
                 int idx = i - _matrix.ColumnCount + j;
                 _vector[idx] -= _matrix.Upper[i][j] * _vector[i];
