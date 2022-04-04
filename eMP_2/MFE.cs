@@ -57,7 +57,7 @@ public class MFE {
             // AssemblyGlobalMatrix();
             AssemblyRemasteredGlobalMatrix();
             AssemblyGlobalVector();
-            AccountingDiriclhetBoundary();
+            AccountingDirichletBoundary();
             _solver.SetMatrix(_remasteredGlobalMatrix);
             _solver.SetVector(_vector);
             _solver.Compute();
@@ -196,7 +196,7 @@ public class MFE {
                  _localVector[i] += _elements[ielem].Interval.Lenght * _test.F(elementPoints[j]) * _massMatrix[i, j]; */
     }
 
-    private void AccountingDiriclhetBoundary() {
+    private void AccountingDirichletBoundary() {
         double value = 1E+10;
 
         _remasteredGlobalMatrix.Diagonal[0] = _remasteredGlobalMatrix.Diagonal[^1] = value;
