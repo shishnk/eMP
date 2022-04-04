@@ -5,9 +5,11 @@ public class BandMatrix {
     public double[][] Lower { get; set; }
     public double[] Diagonal { get; set; }
     public int Size { get; init; }
+    public int ColumnCount { get; init; }
 
     public BandMatrix(int size, int columnCount) {
         Size = size;
+        ColumnCount = columnCount;
         Diagonal = new double[size];
         Upper = new double[size].Select(column => new double[columnCount]).ToArray();
         Lower = new double[size].Select(column => new double[columnCount]).ToArray();
