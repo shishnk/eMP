@@ -9,5 +9,5 @@ GridFactoryTime gridFactoryTime = new();
 IGrid spaceGrid = gridFactorySpace.CreateGrid(GridTypes.SpaceRegular, spaceGridParameters!);
 IGrid timeGrid = gridFactoryTime.CreateGrid(GridTypes.TimeRegular, timeGridParameters!);
 
-MFE mfe = MFE.CreateBuilder().SetSpaceGrid(spaceGrid).SetTimeGrid(timeGrid).SetTest(new FirstTest());
+MFE mfe = MFE.CreateBuilder().SetSpaceGrid(spaceGrid).SetTimeGrid(timeGrid).SetTest(new FirstTest()).SetMethod(new DecomposerLU());
 mfe.Compute();
