@@ -17,7 +17,7 @@ public class Integration {
         _weights[2] = 5.0 / 9.0;
     }
 
-    public double GaussOrder5(MFE.Basis PsiI, MFE.Basis PsiJ, double a, double b) {
+    public double GaussOrder5(MFE.Basis psiI, MFE.Basis psiJ, double a, double b) {
         double qi, pi;
         double result = 0;
 
@@ -27,13 +27,13 @@ public class Integration {
             qi = _weights[i];
             pi = (a + b + _points[i] * h) / 2.0;
 
-            result += qi * PsiI(pi) * PsiJ(pi);
+            result += qi * psiI(pi) * psiJ(pi);
         }
 
         return result * h / 2.0;
     }
 
-    public double GaussOrder5(MFE.Basis Psi, double a, double b) {
+    public double GaussOrder5(Func<double, double> lambda, MFE.Basis psiI, MFE.Basis psiJ, double a, double b) {
         double qi, pi;
         double result = 0;
 
@@ -43,7 +43,23 @@ public class Integration {
             qi = _weights[i];
             pi = (a + b + _points[i] * h) / 2.0;
 
-            result += qi * Psi(pi);
+            result += qi * lambda(pi) * psiI(pi) * psiJ(pi);
+        }
+
+        return result * h / 2.0;
+    }
+
+    public double GaussOrder5(MFE.Basis psi, double a, double b) {
+        double qi, pi;
+        double result = 0;
+
+        double h = Math.Abs(b - a);
+
+        for (int i = 0; i < 3; i++) {
+            qi = _weights[i];
+            pi = (a + b + _points[i] * h) / 2.0;
+
+            result += qi * psi(pi);
         }
 
         return result * h / 2.0;
