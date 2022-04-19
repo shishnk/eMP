@@ -27,11 +27,6 @@ public class MFE {
             return this;
         }
 
-        public MFEBuilder SetNonLinearMethod(INonLinearMethod method) {
-            _mfe._method = method;
-            return this;
-        }
-
         public static implicit operator MFE(MFEBuilder builder)
             => builder._mfe;
     }
@@ -43,12 +38,10 @@ public class MFE {
     private Basis[] _dBasis = default!;
     private ITest _test = default!;
     private Decomposer _solver = default!;
-    private INonLinearMethod _method = default!;
     private IGrid _spaceGrid = default!;
     private IGrid _timeGrid = default!;
-    private Matrix? _massMatrix; // матрица масс
+    private Matrix _massMatrix = default!; // матрица масс
     private Matrix _stiffnessMatrix = default!; // матрица жесткости
-    // private DiagMatrix _globalMatrix = default!; // 
     private BandMatrix _remasteredGlobalMatrix = default!;
     private FiniteElement[] _elements = default!;
     private double[] _localVector = default!;
@@ -103,9 +96,8 @@ public class MFE {
     }
 
     private void Init() {
-        _massMatrix = (_spaceGrid.Sigma.HasValue && _spaceGrid.Sigma != 0) ? new(3) : null;
+        _massMatrix = new(3);
         _stiffnessMatrix = new(3);
-        // _globalMatrix = new(2 * _spaceGrid.Points.Length - 1);
         _remasteredGlobalMatrix = new(_spaceGrid.Points.Length, 2);
         _vector = new double[_remasteredGlobalMatrix.Size];
         _localVector = new double[3];
@@ -132,14 +124,12 @@ public class MFE {
                 _stiffnessMatrix[i, j] = _integration.GaussOrder5(lambda, _dBasis[i], _dBasis[j], 0, 1) /
                                          _elements[ielem].Interval.Lenght;
 
-                if (_massMatrix is not null)
-                    _massMatrix[i, j] = _integration.GaussOrder5(_basis[i], _basis[j], 0, 1) *
-                                        _elements[ielem].Interval.Lenght;
+                _massMatrix[i, j] = _integration.GaussOrder5(_basis[i], _basis[j], 0, 1) *
+                                    _elements[ielem].Interval.Lenght;
             }
         }
 
-        if (_massMatrix is not null)
-            _stiffnessMatrix += _massMatrix;
+        _stiffnessMatrix += _massMatrix;
     }
 
     private void AssemblyRemasteredGlobalMatrix() {
@@ -179,9 +169,6 @@ public class MFE {
             //         _remasteredGlobalMatrix.Upper[index + i][tmpj - 1] += _stiffnessMatrix[i, j];
             //     }
             // }
-
-            _stiffnessMatrix.Clear();
-            _massMatrix?.Clear();
         }
         // }
     }
@@ -201,24 +188,12 @@ public class MFE {
     }
 
     private void AssemblyLocalVector(int ielem) {
-        for (int i = 0; i < _localVector.Length; i++)
-            _localVector[i] = _elements[ielem].Interval.Lenght * _test.F(_spaceGrid.Points[2 * ielem + i]) *
-                              _integration.GaussOrder5(_basis[i], 0, 1);
-
-        /* заполнение локального вектора возможно через матрицу масс(разложения компонентов на линейный интерполянт), 
-        но если в программе задать коэффициент перед ней нуль, то придется инициализировать ручками компоненты матрицы масс */
-        // for (int i = 0; i < _massMatrix?.Size; i++)
-        //     for (int j = 0; j < _massMatrix?.Size; j++)
-        //         _localVector[i] += _elements[ielem].Interval.Lenght * _test.F(_spaceGrid.Points[2 * ielem + i]) * _massMatrix[i, j];
+        for (int i = 0; i < _massMatrix.Size; i++)
+            for (int j = 0; j < _massMatrix.Size; j++)
+                _localVector[i] += _test.F(_spaceGrid.Points[2 * ielem + j]) * _massMatrix[i, j];
     }
 
     private void AccountingDirichletBoundary() {
-        // double value = 1E+10;
-
-        // _remasteredGlobalMatrix.Diagonal[0] = _remasteredGlobalMatrix.Diagonal[^1] = value;
-        // _vector[0] = value * _test.U(_spaceGrid.Points[0]);
-        // _vector[^1] = value * _test.U(_spaceGrid.Points[^1]);
-
         _remasteredGlobalMatrix.Diagonal[0] = 1;
         _remasteredGlobalMatrix.Diagonal[^1] = 1;
 
@@ -231,32 +206,6 @@ public class MFE {
         _vector[0] = _test.U(_spaceGrid.Points[0]);
         _vector[^1] = _test.U(_spaceGrid.Points[^1]);
     }
-
-    // private void AssemblyGlobalMatrix() {
-    //     for (int ielem = 0; ielem < _elements.Length; ielem++) {
-    //         AssemblyLocalMatrices(ielem);
-    //         // |  index   index    index    |
-    //         // |  index   index+1  index+1  |
-    //         // |  index   index+1  index+2  |
-
-    //         int index = ielem * 2;
-
-    //         _globalMatrix.Diags[0][index] += _stiffnessMatrix[0, 0];
-    //         _globalMatrix.Diags[0][index + 1] += _stiffnessMatrix[1, 1];
-    //         _globalMatrix.Diags[0][index + 2] += _stiffnessMatrix[2, 2];
-
-    //         _globalMatrix.Diags[1][index] += _stiffnessMatrix[1, 0];
-    //         _globalMatrix.Diags[1][index + 1] += _stiffnessMatrix[2, 1];
-    //         _globalMatrix.Diags[2][index] += _stiffnessMatrix[2, 0];
-
-    //         _globalMatrix.Diags[3][index] += _stiffnessMatrix[0, 1];
-    //         _globalMatrix.Diags[3][index + 1] += _stiffnessMatrix[1, 2];
-    //         _globalMatrix.Diags[4][index] += _stiffnessMatrix[0, 2];
-
-    //         _stiffnessMatrix.Clear();
-    //         _massMatrix?.Clear();
-    //     }
-    // }
 
     public static MFEBuilder CreateBuilder()
         => new();
