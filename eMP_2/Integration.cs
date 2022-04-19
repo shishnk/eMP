@@ -1,6 +1,6 @@
 namespace eMP_2;
 
-public class Integration {
+public record Integration {
     private readonly double[] _points;
     private readonly double[] _weights;
 
@@ -44,22 +44,6 @@ public class Integration {
             pi = (a + b + _points[i] * h) / 2.0;
 
             result += qi * lambda(pi) * psiI(pi) * psiJ(pi);
-        }
-
-        return result * h / 2.0;
-    }
-
-    public double GaussOrder5(MFE.Basis psi, double a, double b) {
-        double qi, pi;
-        double result = 0;
-
-        double h = Math.Abs(b - a);
-
-        for (int i = 0; i < 3; i++) {
-            qi = _weights[i];
-            pi = (a + b + _points[i] * h) / 2.0;
-
-            result += qi * psi(pi);
         }
 
         return result * h / 2.0;
