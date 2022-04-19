@@ -6,10 +6,10 @@ public interface ITest {
     public double F(double point);
 }
 
-public class FirstTest : ITest {
+public class Test1 : ITest {
     public double U(double point)
-        => point;
+        => point * point;
 
     public double F(double point)
-        => 0;
+        => -5 * point * point;
 }
