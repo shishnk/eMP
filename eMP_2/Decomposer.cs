@@ -18,11 +18,11 @@ public abstract class Decomposer {
 public class DecomposerLU : Decomposer {
     public override void Compute() {
         // Ax = LUx = b; Ly = b, Ux = y;
+        _solution = new double[_matrix.Size];
+        _vector.Copy(_solution);
         LU();
         ForwardElimination();
         BackSubstitution();
-
-        _solution = _vector;
     }
 
     private void LU() {
@@ -33,7 +33,7 @@ public class DecomposerLU : Decomposer {
                 if (idx + offset < _matrix.ColumnCount)
                     continue;
 
-                double sumL = 0.0; 
+                double sumL = 0.0;
                 double sumU = 0.0;
 
                 int idx2 = idx - _matrix.ColumnCount + offset;
@@ -68,10 +68,10 @@ public class DecomposerLU : Decomposer {
                 if (i + j < _matrix.ColumnCount)
                     continue;
 
-                sumY += _matrix.Lower[i][j] * _vector[i - _matrix.ColumnCount + j];
+                sumY += _matrix.Lower[i][j] * _solution![i - _matrix.ColumnCount + j];
             }
 
-            _vector[i] = (_vector[i] - sumY) / _matrix.Diagonal[i];
+            _solution![i] = (_solution[i] - sumY) / _matrix.Diagonal[i];
         }
     }
 
@@ -82,7 +82,7 @@ public class DecomposerLU : Decomposer {
                     continue;
 
                 int idx = i - _matrix.ColumnCount + j;
-                _vector[idx] -= _matrix.Upper[i][j] * _vector[i];
+                _solution![idx] -= _matrix.Upper[i][j] * _solution[i];
             }
         }
     }
