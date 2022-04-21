@@ -147,11 +147,12 @@ public class MFE {
                                          _elements[ielem].Interval.Lenght;
 
                 _massMatrix[i, j] = _integration.GaussOrder5(_basis[i], _basis[j], 0, 1) *
-                                    _elements[ielem].Interval.Lenght * _spaceGrid.Sigma!.Value / timeDifference;
+                                    _elements[ielem].Interval.Lenght * (_spaceGrid.Sigma is null || _spaceGrid.Sigma == 0 ? 1
+                                    : _spaceGrid.Sigma!.Value / timeDifference);
             }
         }
 
-        if (_spaceGrid.Sigma is not null)
+        if (_spaceGrid.Sigma is not null && _spaceGrid.Sigma != 0)
             _stiffnessMatrix += _massMatrix;
     }
 
@@ -209,8 +210,11 @@ public class MFE {
     private void AssemblyLocalVector(int ielem, int itime, double timeDifference) {
         for (int i = 0; i < _massMatrix.Size; i++)
             for (int j = 0; j < _massMatrix.Size; j++)
-                _localVector[i] += _test.F(_spaceGrid.Points[2 * ielem + j], _timeGrid.Points[itime]) * _massMatrix[i, j] * timeDifference / _spaceGrid.Sigma!.Value +
-                                   _layers[0][2 * ielem + j] * _massMatrix[i, j];
+                if (_spaceGrid.Sigma is null || _spaceGrid.Sigma == 0)
+                    _localVector[i] += _test.F(_spaceGrid.Points[2 * ielem + j], _timeGrid.Points[itime]) * _massMatrix[i, j];
+                else
+                    _localVector[i] += _test.F(_spaceGrid.Points[2 * ielem + j], _timeGrid.Points[itime]) * _massMatrix[i, j] * timeDifference / _spaceGrid.Sigma!.Value +
+                                           _layers[0][2 * ielem + j] * _massMatrix[i, j];
     }
 
     private void AccountingDirichletBoundary(int itime) {
