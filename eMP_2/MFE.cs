@@ -1,5 +1,10 @@
 namespace eMP_2;
 
+public enum NonLinearSolverTypes {
+    SimpleIteration,
+    Newton
+}
+
 public class MFE {
     public class MFEBuilder {
         private readonly MFE _mfe;
@@ -22,8 +27,13 @@ public class MFE {
             return this;
         }
 
-        public MFEBuilder SetMethod(Decomposer solver) {
+        public MFEBuilder SetDecomposer(Decomposer solver) {
             _mfe._solver = solver;
+            return this;
+        }
+
+        public MFEBuilder SetMethod((NonLinearSolverTypes, int, double) method) {
+            _mfe._method = method;
             return this;
         }
 
@@ -32,8 +42,8 @@ public class MFE {
     }
     // default! указывает на то, что данное поле не может принимать null
     public delegate double Basis(double x);
-    private Func<double, double> _lambda = default!;
 
+    private (NonLinearSolverTypes, int, double) _method;
     private readonly Integration _integration = new();
     private Basis[] _basis = default!;
     private Basis[] _dBasis = default!;
@@ -53,9 +63,13 @@ public class MFE {
         try {
             ArgumentNullException.ThrowIfNull(_test, $"{nameof(_test)} cannot be null, set the test");
             ArgumentNullException.ThrowIfNull(_solver, $"{nameof(_solver)} cannot be null, set the method of solving SLAE");
+            ArgumentNullException.ThrowIfNull(_method, $"{nameof(_method)} cannot be null, set the method of solving non-linear problem");
 
             Init();
-            SimpleIteration();
+            if (_method.Item1 == NonLinearSolverTypes.SimpleIteration)
+                SimpleIteration();
+
+            // MethodNewton();
 
         } catch (Exception ex) {
             Console.WriteLine($"We had problem: {ex.Message}");
@@ -71,7 +85,7 @@ public class MFE {
         _basis = new Basis[] { QuadraticBasis.Psi1, QuadraticBasis.Psi2, QuadraticBasis.Psi3 };
         _dBasis = new Basis[] { QuadraticBasis.DPsi1, QuadraticBasis.DPsi2, QuadraticBasis.DPsi3 };
         _elements = new FiniteElement[(_spaceGrid.Points.Length - 1) / 2];
-        _layers = new double[_timeGrid.Points.Length].Select(item => new double[_remasteredGlobalMatrix.Size]).ToArray();
+        _layers = new double[2].Select(item => new double[_remasteredGlobalMatrix.Size]).ToArray();
 
         // формирование конечных элементов
         for (int ielem = 0, index = 0; ielem < _elements.Length; ielem++, index += 2)
@@ -83,52 +97,53 @@ public class MFE {
     }
 
     private void SimpleIteration() {
-        int iters;
+        int iters = 0;
+
+        _layers[0].Copy(_layers[1]);
 
         for (int itime = 1; itime < _timeGrid.Points.Length; itime++) {
             double timeDifference = _timeGrid.Points[itime] - _timeGrid.Points[itime - 1];
 
-            _layers[itime - 1].Copy(_layers[itime]);
-
-            AssemblyRemasteredGlobalMatrix(itime, timeDifference);
+            AssemblyRemasteredGlobalMatrix(timeDifference);
             AssemblyGlobalVector(itime, timeDifference);
             AccountingDirichletBoundary(itime);
 
             double fNorm = _vector.Norm();
 
-            for (iters = 0; iters < 1000; iters++) {
+            for (iters = 0; iters < _method.Item2; iters++) {
                 _solver.SetMatrix(_remasteredGlobalMatrix);
                 _solver.SetVector(_vector);
                 _solver.Compute();
 
-                _solver.Solution!.Value.CopyTo(0, _layers[itime], 0, _layers[itime].Length);
+                _solver.Solution!.Value.CopyTo(0, _layers[1], 0, _layers[1].Length);
 
                 _remasteredGlobalMatrix.Clear();
 
-                AssemblyRemasteredGlobalMatrix(itime, timeDifference);
+                AssemblyRemasteredGlobalMatrix(timeDifference);
                 AccountingDirichletBoundary(itime);
 
-                if ((_remasteredGlobalMatrix * _layers[itime]).Sub(_vector).Norm() / fNorm < 1E-14)
+                if ((_remasteredGlobalMatrix * _layers[1]).Sub(_vector).Norm() / fNorm < _method.Item3)
                     break;
             }
 
-            Console.WriteLine($"Iterations: {iters}");
-
-            foreach (var weight in _layers[itime])
-                Console.WriteLine(weight);
-
             _vector.Fill(0);
+            _layers[1].Copy(_layers[0]);
         }
+
+        Console.WriteLine($"Iterations: {iters}");
+
+        foreach (var weight in _layers[1])
+            Console.WriteLine(weight);
     }
 
-    private void AssemblyLocalMatrices(int ielem, int itime, double timeDifference) {
-        _lambda = (point) => _layers[itime][2 * ielem] * _basis[0](point) +
-                             _layers[itime][2 * ielem + 1] * _basis[1](point) +
-                             _layers[itime][2 * ielem + 2] * _basis[2](point);
+    private void AssemblyLocalMatrices(int ielem, double timeDifference) {
+        double lambda(double point) => _layers[1][2 * ielem] * _basis[0](point) +
+                             _layers[1][2 * ielem + 1] * _basis[1](point) +
+                             _layers[1][2 * ielem + 2] * _basis[2](point);
 
         for (int i = 0; i < _stiffnessMatrix.Size; i++) {
             for (int j = 0; j < _stiffnessMatrix.Size; j++) {
-                _stiffnessMatrix[i, j] = _integration.GaussOrder5(_lambda, _dBasis[i], _dBasis[j], 0, 1) /
+                _stiffnessMatrix[i, j] = _integration.GaussOrder5(lambda, _dBasis[i], _dBasis[j], 0, 1) /
                                          _elements[ielem].Interval.Lenght;
 
                 _massMatrix[i, j] = _integration.GaussOrder5(_basis[i], _basis[j], 0, 1) *
@@ -140,9 +155,9 @@ public class MFE {
             _stiffnessMatrix += _massMatrix;
     }
 
-    private void AssemblyRemasteredGlobalMatrix(int itime, double timeDifference) {
+    private void AssemblyRemasteredGlobalMatrix(double timeDifference) {
         for (int ielem = 0; ielem < _elements.Length; ielem++) {
-            AssemblyLocalMatrices(ielem, itime, timeDifference);
+            AssemblyLocalMatrices(ielem, timeDifference);
 
             int index = 2 * ielem;
 
@@ -195,7 +210,7 @@ public class MFE {
         for (int i = 0; i < _massMatrix.Size; i++)
             for (int j = 0; j < _massMatrix.Size; j++)
                 _localVector[i] += _test.F(_spaceGrid.Points[2 * ielem + j], _timeGrid.Points[itime]) * _massMatrix[i, j] * timeDifference / _spaceGrid.Sigma!.Value +
-                                   _layers[itime - 1][2 * ielem + j] * _massMatrix[i, j];
+                                   _layers[0][2 * ielem + j] * _massMatrix[i, j];
     }
 
     private void AccountingDirichletBoundary(int itime) {
