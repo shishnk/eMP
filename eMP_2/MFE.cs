@@ -98,14 +98,14 @@ public class MFE {
 
     private void SimpleIteration() {
         int iters = 0;
+        double residual = 0.0;
 
         _layers[0].Copy(_layers[1]);
 
         for (int itime = 1; itime < _timeGrid.Points.Length; itime++) {
             double timeDifference = _timeGrid.Points[itime] - _timeGrid.Points[itime - 1];
 
-            AssemblyRemasteredGlobalMatrix(timeDifference);
-            AssemblyGlobalVector(itime, timeDifference);
+            AssemblySLAE(itime, timeDifference);
             AccountingDirichletBoundary(itime);
 
             double fNorm = _vector.Norm();
@@ -118,28 +118,48 @@ public class MFE {
                 _solver.Solution!.Value.CopyTo(0, _layers[1], 0, _layers[1].Length);
 
                 _remasteredGlobalMatrix.Clear();
+                _vector.Fill(0);
 
-                AssemblyRemasteredGlobalMatrix(timeDifference);
+                AssemblySLAE(itime, timeDifference);
                 AccountingDirichletBoundary(itime);
 
-                if ((_remasteredGlobalMatrix * _layers[1]).Sub(_vector).Norm() / fNorm < _method.Item3)
+                if ((residual = (_remasteredGlobalMatrix * _layers[1]).Sub(_vector).Norm() / fNorm) < _method.Item3)
                     break;
             }
 
-            _vector.Fill(0);
             _layers[1].Copy(_layers[0]);
         }
 
         Console.WriteLine($"Iterations: {iters}");
+        Console.WriteLine($"Residual:{residual}");
 
         foreach (var weight in _layers[1])
             Console.WriteLine(weight);
+
+        // for report
+        var exactValues = new double[_spaceGrid.Points.Length];
+
+        for (int i = 0; i < exactValues.Length; i++)
+            exactValues[i] = _test.U(_spaceGrid.Points[i], _timeGrid.Points[^1]);
+
+        var sw = new StreamWriter("csv/test2.csv");
+        using (sw) {
+            for (int i = 0; i < _spaceGrid.Points.Length; i++) {
+                if (i == 0) {
+                    sw.WriteLine("$x_i$,Точное,Численное,Вектор погрешности,Невязка");
+                    sw.WriteLine($"{_spaceGrid.Points[i]},{exactValues[i]},{_layers[1][i]},{Math.Abs(exactValues[i] - _layers[1][i])},{residual:0.00E+0}");
+                    continue;
+                }
+
+                sw.WriteLine($"{_spaceGrid.Points[i]},{exactValues[i]},{_layers[1][i]},{Math.Abs(exactValues[i] - _layers[1][i])},");
+            }
+        }
     }
 
     private void AssemblyLocalMatrices(int ielem, double timeDifference) {
         double lambda(double point) => _layers[1][2 * ielem] * _basis[0](point) +
-                             _layers[1][2 * ielem + 1] * _basis[1](point) +
-                             _layers[1][2 * ielem + 2] * _basis[2](point);
+                                       _layers[1][2 * ielem + 1] * _basis[1](point) +
+                                       _layers[1][2 * ielem + 2] * _basis[2](point);
 
         for (int i = 0; i < _stiffnessMatrix.Size; i++) {
             for (int j = 0; j < _stiffnessMatrix.Size; j++) {
@@ -148,7 +168,7 @@ public class MFE {
 
                 _massMatrix[i, j] = _integration.GaussOrder5(_basis[i], _basis[j], 0, 1) *
                                     _elements[ielem].Interval.Lenght * (_spaceGrid.Sigma is null || _spaceGrid.Sigma == 0 ? 1
-                                    : _spaceGrid.Sigma!.Value / timeDifference);
+                                    : _spaceGrid.Sigma.Value / timeDifference);
             }
         }
 
@@ -156,11 +176,18 @@ public class MFE {
             _stiffnessMatrix += _massMatrix;
     }
 
-    private void AssemblyRemasteredGlobalMatrix(double timeDifference) {
+    private void AssemblySLAE(int itime, double timeDifference) {
         for (int ielem = 0; ielem < _elements.Length; ielem++) {
             AssemblyLocalMatrices(ielem, timeDifference);
+            AssemblyLocalVector(ielem, itime, timeDifference);
 
-            int index = 2 * ielem;
+            int index = ielem * 2;
+
+            _vector[index] += _localVector[0];
+            _vector[index + 1] += _localVector[1];
+            _vector[index + 2] += _localVector[2];
+
+            _localVector.Fill(0);
 
             for (int i = 0; i < _stiffnessMatrix.Size; i++)
                 _remasteredGlobalMatrix.Diagonal[index + i] += _stiffnessMatrix[i, i];
@@ -193,28 +220,14 @@ public class MFE {
         }
     }
 
-    private void AssemblyGlobalVector(int itime, double timeDifference) {
-        for (int ielem = 0; ielem < _elements.Length; ielem++) {
-            AssemblyLocalVector(ielem, itime, timeDifference);
-
-            int index = ielem * 2; // [ index, index+1, index+2 ]^T
-
-            _vector[index] += _localVector[0];
-            _vector[index + 1] += _localVector[1];
-            _vector[index + 2] += _localVector[2];
-
-            _localVector.Fill(0);
-        }
-    }
-
     private void AssemblyLocalVector(int ielem, int itime, double timeDifference) {
         for (int i = 0; i < _massMatrix.Size; i++)
             for (int j = 0; j < _massMatrix.Size; j++)
                 if (_spaceGrid.Sigma is null || _spaceGrid.Sigma == 0)
                     _localVector[i] += _test.F(_spaceGrid.Points[2 * ielem + j], _timeGrid.Points[itime]) * _massMatrix[i, j];
                 else
-                    _localVector[i] += _test.F(_spaceGrid.Points[2 * ielem + j], _timeGrid.Points[itime]) * _massMatrix[i, j] * timeDifference / _spaceGrid.Sigma!.Value +
-                                           _layers[0][2 * ielem + j] * _massMatrix[i, j];
+                    _localVector[i] += _test.F(_spaceGrid.Points[2 * ielem + j], _timeGrid.Points[itime]) * _massMatrix[i, j] * timeDifference / _spaceGrid.Sigma.Value +
+                                       _layers[0][2 * ielem + j] * _massMatrix[i, j];
     }
 
     private void AccountingDirichletBoundary(int itime) {
