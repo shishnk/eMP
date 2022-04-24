@@ -108,8 +108,6 @@ public class MFE {
             AssemblySLAE(itime, timeDifference);
             AccountingDirichletBoundary(itime);
 
-            double fNorm = _vector.Norm();
-
             for (iters = 0; iters < _method.Item2; iters++) {
                 _solver.SetMatrix(_remasteredGlobalMatrix);
                 _solver.SetVector(_vector);
@@ -123,7 +121,7 @@ public class MFE {
                 AssemblySLAE(itime, timeDifference);
                 AccountingDirichletBoundary(itime);
 
-                if ((residual = (_remasteredGlobalMatrix * _layers[1]).Sub(_vector).Norm() / fNorm) < _method.Item3)
+                if ((residual = (_remasteredGlobalMatrix * _layers[1]).Sub(_vector).Norm() / _vector.Norm()) < _method.Item3)
                     break;
             }
 
@@ -142,16 +140,16 @@ public class MFE {
         for (int i = 0; i < exactValues.Length; i++)
             exactValues[i] = _test.U(_spaceGrid.Points[i], _timeGrid.Points[^1]);
 
-        var sw = new StreamWriter("csv/test2.csv");
+        var sw = new StreamWriter("csv/test5.csv");
         using (sw) {
             for (int i = 0; i < _spaceGrid.Points.Length; i++) {
                 if (i == 0) {
-                    sw.WriteLine("$x_i$,Точное,Численное,Вектор погрешности,Невязка");
-                    sw.WriteLine($"{_spaceGrid.Points[i]},{exactValues[i]},{_layers[1][i]},{Math.Abs(exactValues[i] - _layers[1][i])},{residual:0.00E+0}");
+                    sw.WriteLine("$x_i$,Точное,Численное,Погрешность,Невязка,Кол-во итераций");
+                    sw.WriteLine($"{_spaceGrid.Points[i]},{exactValues[i]},{_layers[1][i]},{exactValues.Sub(_layers[1]).Norm() / exactValues.Norm()},{residual:0.00E+0},{iters}");
                     continue;
                 }
 
-                sw.WriteLine($"{_spaceGrid.Points[i]},{exactValues[i]},{_layers[1][i]},{Math.Abs(exactValues[i] - _layers[1][i])},");
+                sw.WriteLine($"{_spaceGrid.Points[i]},{exactValues[i]},{_layers[1][i]},,,");
             }
         }
     }
@@ -163,7 +161,7 @@ public class MFE {
 
         for (int i = 0; i < _stiffnessMatrix.Size; i++) {
             for (int j = 0; j < _stiffnessMatrix.Size; j++) {
-                _stiffnessMatrix[i, j] = _integration.GaussOrder5(lambda, _dBasis[i], _dBasis[j], 0, 1) /
+                _stiffnessMatrix[i, j] = _integration.GaussOrder5(_test.Lambda(lambda), _dBasis[i], _dBasis[j], 0, 1) /
                                          _elements[ielem].Interval.Lenght;
 
                 _massMatrix[i, j] = _integration.GaussOrder5(_basis[i], _basis[j], 0, 1) *
@@ -177,6 +175,9 @@ public class MFE {
     }
 
     private void AssemblySLAE(int itime, double timeDifference) {
+        _vector.Fill(0);
+        _remasteredGlobalMatrix.Clear();
+        
         for (int ielem = 0; ielem < _elements.Length; ielem++) {
             AssemblyLocalMatrices(ielem, timeDifference);
             AssemblyLocalVector(ielem, itime, timeDifference);
