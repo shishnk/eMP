@@ -1,4 +1,4 @@
-namespace eMF_1;
+namespace eMP_1;
 
 public class RegularGrid : Grid {
     private List<double> _allLinesX;

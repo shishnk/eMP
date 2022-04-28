@@ -1,4 +1,4 @@
-namespace eMF_1;
+namespace eMP_1;
 
 public abstract class Grid {
     public abstract ImmutableArray<double> LinesX { get; init; }

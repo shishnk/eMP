@@ -1,4 +1,4 @@
-namespace eMF_1;
+namespace eMP_1;
 
 public class NestedGrid : Grid {
     private readonly List<double> _allLinesX;
