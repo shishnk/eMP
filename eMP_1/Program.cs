@@ -1,12 +1,11 @@
-﻿using eMF_1;
+﻿using eMP_1;
 
 GridFactory gridFactory = new();
 // MFD mfd = new(gridFactory.CreateGrid(GridType.Irregular, "grid/grid(irregular).txt"), "boundaries.txt");
 MFD mfd = new(gridFactory.CreateGrid(GridType.Nested, "grid/grid(nested).txt"), "boundaries.txt");
 // MFD mfd = new(gridFactory.CreateGrid(GridType.Regular, "grid/grid(regular).txt"), "boundaries.txt");
-// mfd.SetTest(new Test());
-// mfd.SetTest(new FirstTest());  // $x$, $\lambda = 1$, $\gamma = 0$
-mfd.SetTest(new SecondTest()); // $x^2 - y$, $\lambda = 0.5$, $\gamma = 1$ 
+mfd.SetTest(new FirstTest());  // $x$, $\lambda = 1$, $\gamma = 0$
+// mfd.SetTest(new SecondTest()); // $x^2 - y$, $\lambda = 0.5$, $\gamma = 1$ 
 // mfd.SetTest(new ThirdTest());  // $3x^3 + 2y^3$, 1 area: $\lambda = \gamma = 0.5 $, 2 area : $\lambda = \gamma = 2$
 // mfd.SetTest(new FourthTest());    // $\ln{(x+y)}$, $\lambda = 1, \gamma = 1$
 // mfd.SetTest(new FifthTest());  // $4x^4$, $\lambda = 1$, $\gamma = 0$

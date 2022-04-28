@@ -1,13 +1,11 @@
-namespace eMF_1;
+namespace eMP_1;
 
-public interface ITest
-{
+public interface ITest {
     public double U(Point2D point);
     public double F(Point2D point);
 }
 
-public class FirstTest : ITest
-{
+public class FirstTest : ITest {
     public double U(Point2D point)
         => point.X;
 
@@ -15,17 +13,15 @@ public class FirstTest : ITest
         => 0;
 }
 
-public class SecondTest : ITest
-{
+public class SecondTest : ITest {
     public double U(Point2D point)
         => point.X * point.X - point.Y;
-        
+
     public double F(Point2D point)
         => -1 + point.X * point.X - point.Y;
 }
 
-public class ThirdTest : ITest
-{
+public class ThirdTest : ITest {
     public double U(Point2D point)
         => 3 * point.X * point.X * point.X + 2 * point.Y * point.Y * point.Y;
 
@@ -35,8 +31,7 @@ public class ThirdTest : ITest
         -36 * point.X - 24 * point.Y + 2 * (3 * point.X * point.X * point.X + 2 * point.Y * point.Y * point.Y);
 }
 
-public class FourthTest : ITest
-{
+public class FourthTest : ITest {
     public double U(Point2D point)
         => Math.Log(point.X + point.Y);
 
@@ -44,16 +39,14 @@ public class FourthTest : ITest
         => 2 / ((point.X + point.Y) * (point.X + point.Y));
 }
 
-public class FifthTest : ITest
-{
+public class FifthTest : ITest {
     public double U(Point2D point)
         => 4 * point.X * point.X * point.X * point.X;
     public double F(Point2D point)
         => -48 * point.X * point.X;
 }
 
-public class SixthTest : ITest
-{
+public class SixthTest : ITest {
     public double U(Point2D point)
         => 4 * point.X * point.X * point.X * point.X + 2 * point.Y * point.Y * point.Y * point.Y;
 
@@ -61,8 +54,7 @@ public class SixthTest : ITest
         => -48 * point.X * point.X - 24 * point.Y * point.Y;
 }
 
-public class SeventhTest : ITest
-{
+public class SeventhTest : ITest {
     public double U(Point2D point)
         => Math.Exp(point.X) + point.Y;
 
@@ -70,8 +62,7 @@ public class SeventhTest : ITest
         => point.Y;
 }
 
-public class EighthTest : ITest
-{
+public class EighthTest : ITest {
     public double U(Point2D point)
         => point.X * point.X * point.X + point.Y;
 

@@ -1,63 +1,55 @@
-namespace eMF_1;
+namespace eMP_1;
 
-public enum PointType
-{
+public enum PointType {
+    None,
     Boundary,
     Internal,
     Dummy
 }
 
-public enum BoundaryType
-{
+public enum BoundaryType {
     None,
     Dirichlet,
     Neumann,
     Mixed
 }
 
-public enum GridType
-{
+public enum GridType {
     Regular,
     Irregular,
     Nested
 }
 
-public enum NormalType
-{
+public enum NormalType {
+    None,
     LeftX,
     RightX,
     UpperY,
     BottomY
 }
 
-public class MFD
-{
-    private Grid _grid;
+public class MFD {
+    private readonly Grid _grid;
     private DiagMatrix _matrix;
     private ITest _test;
     private ISolver _solver;
-    private Boundary[] _boundaries;
+    private readonly Boundary[] _boundaries;
     private double[] _q;
     private double[] _pr;
-    private double _beta;
+    private readonly double _beta;
     public double[] Weights
         => _q;
 
-    public MFD(Grid grid, string boundaryPath)
-    {
-        try
-        {
-            using (var sr = new StreamReader(boundaryPath))
-            {
+    public MFD(Grid grid, string boundaryPath) {
+        try {
+            using (var sr = new StreamReader(boundaryPath)) {
                 _beta = double.Parse(sr.ReadLine());
                 _boundaries = sr.ReadToEnd().Split("\n")
                 .Select(str => Boundary.BoundaryParse(str)).ToArray();
             }
 
             _grid = grid;
-        }
-        catch (Exception ex)
-        {
+        } catch (Exception ex) {
             Console.WriteLine(ex.Message);
         }
     }
@@ -68,10 +60,8 @@ public class MFD
     public void SetMethodSolvingSLAE(ISolver solver)
         => _solver = solver;
 
-    public void Compute()
-    {
-        try
-        {
+    public void Compute() {
+        try {
             if (_test is null)
                 throw new Exception("Set the test!");
 
@@ -83,37 +73,31 @@ public class MFD
             Init();
             BuildMatrix();
             _q = _solver.Compute(_matrix, _pr);
-        }
-        catch (Exception ex)
-        {
+
+        } catch (Exception ex) {
             Console.WriteLine(ex.Message);
         }
     }
 
-    private void Init()
-    {
+    private void Init() {
         _matrix = new(_grid.Points.Count, (_grid.AllLinesX.Count > _grid.AllLinesX.Count) ?
         _grid.AllLinesX.Count - 2 : _grid.AllLinesY.Count - 2);
         _pr = new double[_matrix.Size];
         _q = new double[_matrix.Size];
     }
 
-    private void BuildMatrix()
-    {
+    private void BuildMatrix() {
         double hx, hy, hix, hiy, hi, h = 1E-12;
         double lambda, gamma;
         double us, ubeta;
         double leftDerivative, rightDerivative;
         NormalType normalType;
 
-        for (int i = 0; i < _grid.Points.Count; i++)
-        {
-            switch (_grid.Points[i].PointType)
-            {
+        for (int i = 0; i < _grid.Points.Count; i++) {
+            switch (_grid.Points[i].PointType) {
                 case PointType.Boundary:
 
-                    switch (_grid.Points[i].BoundaryType)
-                    {
+                    switch (_grid.Points[i].BoundaryType) {
                         case BoundaryType.Dirichlet:
 
                             _matrix.Diags[0][i] = 1;
@@ -127,8 +111,7 @@ public class MFD
 
                             normalType = _grid.Normal(_grid.Points[i]);
 
-                            switch (normalType)
-                            {
+                            switch (normalType) {
                                 case NormalType.LeftX:
 
                                     hi = _grid.AllLinesX[_grid.Points[i].I + 1] - _grid.AllLinesX[_grid.Points[i].I];
@@ -179,8 +162,7 @@ public class MFD
                             normalType = _grid.Normal(_grid.Points[i]);
                             us = _test.U(_grid.Points[i]);
 
-                            switch (normalType)
-                            {
+                            switch (normalType) {
                                 case NormalType.LeftX:
 
                                     hi = _grid.AllLinesX[_grid.Points[i].I + 1] - _grid.AllLinesX[_grid.Points[i].I];
@@ -251,16 +233,13 @@ public class MFD
 
                     _pr[i] = _test.F(_grid.Points[i]);
 
-                    if (_grid is RegularGrid)
-                    {
+                    if (_grid is RegularGrid) {
                         _matrix.Diags[0][i] = lambda * (2.0 / (hx * hx) + 2.0 / (hy * hy)) + gamma;
                         _matrix.Diags[3][i] = -lambda / (hy * hy);
                         _matrix.Diags[4][i] = -lambda / (hx * hx);
                         _matrix.Diags[1][i + _matrix.Indexes[1]] = -lambda / (hy * hy);
                         _matrix.Diags[2][i + _matrix.Indexes[2]] = -lambda / (hx * hx);
-                    }
-                    else
-                    {
+                    } else {
                         hix = _grid.AllLinesX[_grid.Points[i].I] - _grid.AllLinesX[_grid.Points[i].I - 1];
                         hiy = _grid.AllLinesY[_grid.Points[i].J] - _grid.AllLinesY[_grid.Points[i].J - 1];
 

@@ -1,14 +1,12 @@
-namespace eMF_1;
+namespace eMP_1;
 
-public class DiagMatrix
-{
+public class DiagMatrix {
     public double[][] Diags { get; set; }
     public int[] Indexes { get; init; }
     public int Size { get; init; }
     public int ZeroDiags { get; init; }
 
-    public DiagMatrix(int countPoints, int zeroDiags)
-    {
+    public DiagMatrix(int countPoints, int zeroDiags) {
         Size = countPoints;
         ZeroDiags = zeroDiags;
         Diags = new double[5][];

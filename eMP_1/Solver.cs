@@ -1,4 +1,4 @@
-namespace eMF_1;
+namespace eMP_1;
 
 public interface ISolver {
     public int MaxIters { get; init; }
