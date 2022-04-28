@@ -45,7 +45,7 @@ public abstract class Grid {
         if (point.PointType != PointType.Boundary)
             throw new Exception("To determine the normal to the boundary, the point needs the boundary!");
 
-        
+
 
         return normalType;
     }

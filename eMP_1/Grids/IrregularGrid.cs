@@ -46,7 +46,7 @@ public class IrregularGrid : Grid {
             _allLinesX = new();
             _allLinesY = new();
             _points = new();
-            
+
         } catch (Exception ex) {
             Console.WriteLine(ex.Message);
         }
