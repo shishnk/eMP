@@ -1,14 +1,14 @@
 namespace eMF_1;
 
 public class NestedGrid : Grid {
-    private List<double> _allLinesX;
-    private List<double> _allLinesY;
-    private List<Point2D> _points;
-    private int[] _splitsX;
-    private int[] _splitsY;
-    private double[] _kX;
-    private double[] _kY;
-    private (int, double, double, int, int, int, int)[] _areas;
+    private readonly List<double> _allLinesX;
+    private readonly List<double> _allLinesY;
+    private readonly List<Point2D> _points;
+    private readonly int[] _splitsX;
+    private readonly int[] _splitsY;
+    private readonly double[] _kX;
+    private readonly double[] _kY;
+    private readonly (int, double, double, int, int, int, int)[] _areas;
     public override ImmutableArray<double> LinesX { get; init; }
     public override ImmutableArray<double> LinesY { get; init; }
     public override ImmutableList<Point2D> Points
@@ -17,16 +17,12 @@ public class NestedGrid : Grid {
         => _allLinesX.ToImmutableList();
     public override ImmutableList<double> AllLinesY
         => _allLinesY.ToImmutableList();
-    public override ImmutableArray<(int, double, double, int, int, int, int)> Areas
-        => _areas.ToImmutableArray();
-    public ImmutableArray<int> SplitsX
-        => _splitsX.ToImmutableArray();
-    public ImmutableArray<int> SplitsY
-        => _splitsY.ToImmutableArray();
-    public ImmutableArray<double> KX
-        => _kX.ToImmutableArray();
-    public ImmutableArray<double> KY
-        => _kY.ToImmutableArray();
+    public override ImmutableArray<(int, double, double, int, int, int, int)> Areas => _areas.ToImmutableArray();
+    public ImmutableArray<int> SplitsX => _splitsX.ToImmutableArray();
+    public ImmutableArray<int> SplitsY => _splitsY.ToImmutableArray();
+    public ImmutableArray<double> KX => _kX.ToImmutableArray();
+    public ImmutableArray<double> KY => _kY.ToImmutableArray();
+    public int NumberNesting { get; init; }
 
     public NestedGrid(string path) {
         try {
@@ -37,6 +33,7 @@ public class NestedGrid : Grid {
                 _splitsY = sr.ReadLine().Split().Select(value => int.Parse(value)).ToArray();
                 _kX = sr.ReadLine().Split().Select(value => double.Parse(value)).ToArray();
                 _kY = sr.ReadLine().Split().Select(value => double.Parse(value)).ToArray();
+                NumberNesting = int.Parse(sr.ReadLine());
                 _areas = sr.ReadToEnd().Split("\n").Select(row => row.Split())
                 .Select(value => (int.Parse(value[0]), double.Parse(value[1]), double.Parse(value[2]),
                 int.Parse(value[3]), int.Parse(value[4]), int.Parse(value[5]), int.Parse(value[6]))).ToArray();
@@ -52,13 +49,14 @@ public class NestedGrid : Grid {
     }
 
     public override void Build() {
+        for (int i = 0; i < NumberNesting; i++)
+            for (int j = 0; j < _kX.Length; j++)
+                _kX[j] = Math.Sqrt(_kX[j]);
+
         for (int i = 0; i < LinesX.Length - 1; i++) {
             double h;
             double sum = 0;
             double lenght = LinesX[i + 1] - LinesX[i];
-
-            for (int j = 0; j < _kX.Length; j++)
-                _kX[j] = Math.Sqrt(_kX[j]);
 
             for (int k = 0; k < _splitsX[i]; k++)
                 sum += Math.Pow(_kX[i], k);
@@ -72,20 +70,18 @@ public class NestedGrid : Grid {
 
                 h *= _kX[i];
             }
-
-            sum = 0;
-
         }
 
         _allLinesX.Add(LinesX.Last());
+
+        for (int i = 0; i < NumberNesting; i++)
+            for (int j = 0; j < _kY.Length; j++)
+                _kY[j] = Math.Sqrt(_kY[j]);
 
         for (int i = 0; i < LinesY.Length - 1; i++) {
             double h;
             double sum = 0;
             double lenght = LinesY[i + 1] - LinesY[i];
-
-            for (int j = 0; j < _kY.Length; j++)
-                _kY[j] = Math.Sqrt(_kY[j]);
 
             for (int k = 0; k < _splitsY[i]; k++)
                 sum += Math.Pow(_kY[i], k);
@@ -99,8 +95,6 @@ public class NestedGrid : Grid {
 
                 h *= _kY[i];
             }
-
-            sum = 0;
         }
 
         _allLinesY.Add(LinesY.Last());
@@ -108,8 +102,9 @@ public class NestedGrid : Grid {
         for (int i = 0; i < _allLinesX.Count; i++)
             for (int j = 0; j < _allLinesY.Count; j++)
                 _points.Add(new(_allLinesX[i], _allLinesY[j], i, j,
-                PointsTypes(_allLinesX[i], _allLinesY[j])));
+                PointTypesWithoutInternalCheck(_allLinesX[i], _allLinesY[j])));
 
+        InternalCheck();
         SetAreaNumber();
         WriteToFilePoints();
     }
