@@ -1,6 +1,10 @@
 namespace eMF_1;
 
-public class GridFactory
+public interface IFactory {
+    public Grid CreateGrid(GridType gridType, string path);
+}
+
+public class GridFactory : IFactory
 {
     public Grid CreateGrid(GridType gridType, string path)
     {

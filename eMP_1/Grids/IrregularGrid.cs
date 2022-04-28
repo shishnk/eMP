@@ -1,14 +1,14 @@
 namespace eMF_1;
 
 public class IrregularGrid : Grid {
-    private List<double> _allLinesX;
-    private List<double> _allLinesY;
-    private List<Point2D> _points;
-    private int[] _splitsX;
-    private int[] _splitsY;
-    private double[] _kX;
-    private double[] _kY;
-    private (int, double, double, int, int, int, int)[] _areas;
+    private readonly List<double> _allLinesX;
+    private readonly List<double> _allLinesY;
+    private readonly List<Point2D> _points;
+    private readonly int[] _splitsX;
+    private readonly int[] _splitsY;
+    private readonly double[] _kX;
+    private readonly double[] _kY;
+    private readonly (int, double, double, int, int, int, int)[] _areas;
     public override ImmutableArray<double> LinesX { get; init; }
     public override ImmutableArray<double> LinesY { get; init; }
     public override ImmutableList<Point2D> Points
@@ -46,6 +46,7 @@ public class IrregularGrid : Grid {
             _allLinesX = new();
             _allLinesY = new();
             _points = new();
+            
         } catch (Exception ex) {
             Console.WriteLine(ex.Message);
         }
@@ -69,9 +70,6 @@ public class IrregularGrid : Grid {
 
                 h *= _kX[i];
             }
-
-            sum = 0;
-
         }
 
         _allLinesX.Add(LinesX.Last());
@@ -93,8 +91,6 @@ public class IrregularGrid : Grid {
 
                 h *= _kY[i];
             }
-
-            sum = 0;
         }
 
         _allLinesY.Add(LinesY.Last());
@@ -102,8 +98,9 @@ public class IrregularGrid : Grid {
         for (int i = 0; i < _allLinesX.Count; i++)
             for (int j = 0; j < _allLinesY.Count; j++)
                 _points.Add(new(_allLinesX[i], _allLinesY[j], i, j,
-                PointsTypes(_allLinesX[i], _allLinesY[j])));
+                PointTypesWithoutInternalCheck(_allLinesX[i], _allLinesY[j])));
 
+        InternalCheck();
         SetAreaNumber();
         WriteToFilePoints();
     }

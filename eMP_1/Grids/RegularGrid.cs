@@ -3,8 +3,8 @@ namespace eMF_1;
 public class RegularGrid : Grid {
     private List<double> _allLinesX;
     private List<double> _allLinesY;
-    private List<Point2D> _points;
-    private (int, double, double, int, int, int, int)[] _areas;
+    private readonly List<Point2D> _points;
+    private readonly (int, double, double, int, int, int, int)[] _areas;
     public override ImmutableArray<double> LinesX { get; init; }
     public override ImmutableArray<double> LinesY { get; init; }
     public override ImmutableList<double> AllLinesX
@@ -65,8 +65,9 @@ public class RegularGrid : Grid {
         for (int i = 0; i < _allLinesX.Count; i++)
             for (int j = 0; j < _allLinesY.Count; j++)
                 _points.Add(new(_allLinesX[i], _allLinesY[j], i, j,
-                PointsTypes(_allLinesX[i], _allLinesY[j])));
+                PointTypesWithoutInternalCheck(_allLinesX[i], _allLinesY[j])));
 
+        InternalCheck();
         SetAreaNumber();
         WriteToFilePoints();
     }
