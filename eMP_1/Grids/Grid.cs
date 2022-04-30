@@ -10,50 +10,37 @@ public abstract class Grid {
 
     public abstract void Build();
 
-    // public NormalType Normal(Point2D point) {
-    //     NormalType normalType = default;
-
-    //     if (point.PointType != PointType.Boundary)
-    //         throw new Exception("To determine the normal to the boundary, the point needs the boundary!");
-
-    //     else if (point.X >= LinesX[0] && point.X <= LinesX[1] && point.Y == LinesY[2]) {
-    //         normalType = NormalType.UpperY;
-    //         return normalType;
-    //     } else if (point.X >= LinesX[1] && point.X <= LinesX[2] && point.Y == LinesY[1]) {
-    //         normalType = NormalType.UpperY;
-    //         return normalType;
-    //     } else if (point.X == LinesX[0] && point.Y >= LinesY[0] && point.Y <= LinesY[2]) {
-    //         normalType = NormalType.LeftX;
-    //         return normalType;
-    //     } else if (point.X == LinesX[1] && point.Y >= LinesY[1] && point.Y <= LinesY[2]) {
-    //         normalType = NormalType.RightX;
-    //         return normalType;
-    //     } else if (point.X == LinesX[2] && point.Y >= LinesY[0] && point.Y <= LinesY[1]) {
-    //         normalType = NormalType.RightX;
-    //         return normalType;
-    //     } else if (point.X >= LinesX[0] && point.X <= LinesX[2] && point.Y == LinesY[0]) {
-    //         normalType = NormalType.BottomY;
-    //         return normalType;
-    //     } else
-    //         return normalType;
-
-    // }
-
     public NormalType Normal(Point2D point) {
-        NormalType normalType = NormalType.None;
-
-        if (point.PointType != PointType.Boundary)
+        if (point.PointType != PointType.Boundary) {
             throw new Exception("To determine the normal to the boundary, the point needs the boundary!");
+        }
 
+        var normalType = NormalType.None;
 
+        foreach (var area in Areas) {
+            normalType = point switch {
+                _ when point.X == LinesX[area.Item4] => NormalType.LeftX,
+                _ when point.Y == LinesY[area.Item6] => NormalType.BottomY,
+                _ when point.X == LinesX[area.Item5] => NormalType.RightX,
+                _ when point.Y == LinesY[area.Item7] => NormalType.UpperY,
+
+                _ => NormalType.None,
+            };
+
+            if (normalType != NormalType.None) {
+                break;
+            }
+        }
 
         return normalType;
     }
 
     protected PointType PointTypesWithoutInternalCheck(double x, double y) {
-        foreach (var area in Areas)
-            if (x >= LinesX[area.Item4] && x <= LinesX[area.Item5] && y >= LinesY[area.Item6] && y <= LinesY[area.Item7])
+        foreach (var area in Areas) {
+            if (x >= LinesX[area.Item4] && x <= LinesX[area.Item5] && y >= LinesY[area.Item6] && y <= LinesY[area.Item7]) {
                 return PointType.Boundary;
+            }
+        }
 
         return PointType.Dummy;
     }
