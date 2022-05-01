@@ -1,14 +1,14 @@
 namespace eMP_1;
 
 public class NestedGrid : Grid {
-    private readonly List<double> _allLinesX;
-    private readonly List<double> _allLinesY;
-    private readonly List<Point2D> _points;
-    private readonly int[] _splitsX;
-    private readonly int[] _splitsY;
-    private readonly double[] _kX;
-    private readonly double[] _kY;
-    private readonly (int, double, double, int, int, int, int)[] _areas;
+    private List<double> _allLinesX;
+    private List<double> _allLinesY;
+    private List<Point2D> _points;
+    private int[] _splitsX;
+    private int[] _splitsY;
+    private double[] _kX;
+    private double[] _kY;
+    private (int, double, double, int, int, int, int)[] _areas;
     public override ImmutableArray<double> LinesX { get; init; }
     public override ImmutableArray<double> LinesY { get; init; }
     public override ImmutableList<Point2D> Points
