@@ -49,6 +49,7 @@ public class MFD {
             }
 
             _grid = grid;
+
         } catch (Exception ex) {
             Console.WriteLine(ex.Message);
         }
@@ -87,7 +88,7 @@ public class MFD {
     }
 
     private void BuildMatrix() {
-        double hx, hy, hix, hiy, hi, h = 1E-12;
+        double hx, hy, hix, hiy, hi;
         double lambda, gamma;
         double us, ubeta;
         double leftDerivative, rightDerivative;
@@ -117,7 +118,7 @@ public class MFD {
                                     hi = _grid.AllLinesX[_grid.Points[i].I + 1] - _grid.AllLinesX[_grid.Points[i].I];
                                     _matrix.Diags[0][i] = lambda / hi;
                                     _matrix.Diags[4][i] = -lambda / hi;
-                                    _pr[i] = -lambda * RightDerivativeX(_grid.Points[i], h);
+                                    _pr[i] = -lambda * RightDerivativeX(_grid.Points[i], hi);
 
                                     break;
 
@@ -126,7 +127,7 @@ public class MFD {
                                     hi = _grid.AllLinesY[_grid.Points[i].J + 1] - _grid.AllLinesY[_grid.Points[i].J];
                                     _matrix.Diags[0][i] = lambda / hi;
                                     _matrix.Diags[3][i] = -lambda / hi;
-                                    _pr[i] = -lambda * RightDerivativeY(_grid.Points[i], h);
+                                    _pr[i] = -lambda * RightDerivativeY(_grid.Points[i], hi);
 
                                     break;
 
@@ -135,7 +136,7 @@ public class MFD {
                                     hi = _grid.AllLinesX[_grid.Points[i].I] - _grid.AllLinesX[_grid.Points[i].I - 1];
                                     _matrix.Diags[0][i] = lambda / hi;
                                     _matrix.Diags[2][i + _matrix.Indexes[2]] = -lambda / hi;
-                                    _pr[i] = lambda * LeftDerivativeX(_grid.Points[i], h);
+                                    _pr[i] = lambda * LeftDerivativeX(_grid.Points[i], hi);
 
                                     break;
 
@@ -144,7 +145,7 @@ public class MFD {
                                     hi = _grid.AllLinesY[_grid.Points[i].J] - _grid.AllLinesY[_grid.Points[i].J - 1];
                                     _matrix.Diags[0][i] = lambda / hi;
                                     _matrix.Diags[1][i + _matrix.Indexes[1]] = -lambda / hi;
-                                    _pr[i] = lambda * LeftDerivativeY(_grid.Points[i], h);
+                                    _pr[i] = lambda * LeftDerivativeY(_grid.Points[i], hi);
 
                                     break;
 
@@ -166,7 +167,7 @@ public class MFD {
                                 case NormalType.LeftX:
 
                                     hi = _grid.AllLinesX[_grid.Points[i].I + 1] - _grid.AllLinesX[_grid.Points[i].I];
-                                    rightDerivative = RightDerivativeX(_grid.Points[i], h);
+                                    rightDerivative = RightDerivativeX(_grid.Points[i], hi);
                                     ubeta = -lambda * rightDerivative / _beta + us;
                                     _matrix.Diags[0][i] = lambda / hi + _beta;
                                     _matrix.Diags[4][i] = -lambda / hi;
@@ -177,7 +178,7 @@ public class MFD {
                                 case NormalType.BottomY:
 
                                     hi = _grid.AllLinesY[_grid.Points[i].J + 1] - _grid.AllLinesY[_grid.Points[i].J];
-                                    rightDerivative = RightDerivativeY(_grid.Points[i], h);
+                                    rightDerivative = RightDerivativeY(_grid.Points[i], hi);
                                     ubeta = -lambda * rightDerivative / _beta + us;
                                     _matrix.Diags[0][i] = lambda / hi + _beta;
                                     _matrix.Diags[3][i] = -lambda / hi;
@@ -188,7 +189,7 @@ public class MFD {
                                 case NormalType.RightX:
 
                                     hi = _grid.AllLinesX[_grid.Points[i].I] - _grid.AllLinesX[_grid.Points[i].I - 1];
-                                    leftDerivative = LeftDerivativeX(_grid.Points[i], h);
+                                    leftDerivative = LeftDerivativeX(_grid.Points[i], hi);
                                     ubeta = lambda * leftDerivative / _beta + us;
                                     _matrix.Diags[0][i] = lambda / hi + _beta;
                                     _matrix.Diags[2][i + _matrix.Indexes[2]] = -lambda / hi;
@@ -199,7 +200,7 @@ public class MFD {
                                 case NormalType.UpperY:
 
                                     hi = _grid.AllLinesY[_grid.Points[i].J] - _grid.AllLinesY[_grid.Points[i].J - 1];
-                                    leftDerivative = LeftDerivativeY(_grid.Points[i], h);
+                                    leftDerivative = LeftDerivativeY(_grid.Points[i], hi);
                                     ubeta = lambda * leftDerivative / _beta + us;
                                     _matrix.Diags[0][i] = lambda / hi + _beta;
                                     _matrix.Diags[1][i + _matrix.Indexes[1]] = -lambda / hi;
