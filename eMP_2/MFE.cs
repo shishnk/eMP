@@ -65,11 +65,10 @@ public class MFE {
             ArgumentNullException.ThrowIfNull(_solver, $"{nameof(_solver)} cannot be null, set the method of solving SLAE");
             ArgumentNullException.ThrowIfNull(_method, $"{nameof(_method)} cannot be null, set the method of solving non-linear problem");
 
-            Init();
-            if (_method.Item1 == NonLinearSolverTypes.SimpleIteration)
-                SimpleIteration();
+            bool flag = _method.Item1 != NonLinearSolverTypes.SimpleIteration;
 
-            // MethodNewton();
+            Init();
+            Solve(flag);
 
         } catch (Exception ex) {
             Console.WriteLine($"We had problem: {ex.Message}");
@@ -96,8 +95,9 @@ public class MFE {
             _layers[0][i] = _test.U(_spaceGrid.Points[i], _timeGrid.Points[0]);
     }
 
-    private void SimpleIteration() {
-        int iters = 0;
+    private void Solve(bool flag) {
+        int iters;
+        int globalIters = 0;
         double residual = 0.0;
 
         _layers[0].Copy(_layers[1]);
@@ -106,9 +106,10 @@ public class MFE {
             double timeDifference = _timeGrid.Points[itime] - _timeGrid.Points[itime - 1];
 
             AssemblySLAE(itime, timeDifference);
+            Linearization();
             AccountingDirichletBoundary(itime);
 
-            for (iters = 0; iters < _method.Item2; iters++) {
+            for (iters = 1; iters < _method.Item2; iters++) {
                 _solver.SetMatrix(_remasteredGlobalMatrix);
                 _solver.SetVector(_vector);
                 _solver.Compute();
@@ -120,38 +121,47 @@ public class MFE {
 
                 AssemblySLAE(itime, timeDifference);
                 AccountingDirichletBoundary(itime);
+                
+                residual = (_remasteredGlobalMatrix * _layers[1]).Sub(_vector).Norm() / _vector.Norm();
 
-                if ((residual = (_remasteredGlobalMatrix * _layers[1]).Sub(_vector).Norm() / _vector.Norm()) < _method.Item3)
+                Linearization();
+                AccountingDirichletBoundary(itime);
+                // var nonLinearMatrix = _remasteredGlobalMatrix.DeepClone();
+                // var nonLinearVector = _vector.ToArray();
+
+                if (residual < _method.Item3)
                     break;
             }
+
+            globalIters += iters;
 
             _layers[1].Copy(_layers[0]);
         }
 
-        Console.WriteLine($"Iterations: {iters}");
+        Console.WriteLine($"Iterations: {globalIters}");
         Console.WriteLine($"Residual:{residual}");
 
         foreach (var weight in _layers[1])
             Console.WriteLine(weight);
 
         // for report
-        var exactValues = new double[_spaceGrid.Points.Length];
+        // var exactValues = new double[_spaceGrid.Points.Length];
 
-        for (int i = 0; i < exactValues.Length; i++)
-            exactValues[i] = _test.U(_spaceGrid.Points[i], _timeGrid.Points[^1]);
+        // for (int i = 0; i < exactValues.Length; i++)
+        //     exactValues[i] = _test.U(_spaceGrid.Points[i], _timeGrid.Points[^1]);
 
-        var sw = new StreamWriter("csv/test5.csv");
-        using (sw) {
-            for (int i = 0; i < _spaceGrid.Points.Length; i++) {
-                if (i == 0) {
-                    sw.WriteLine("$x_i$,Точное,Численное,Погрешность,Невязка,Кол-во итераций");
-                    sw.WriteLine($"{_spaceGrid.Points[i]},{exactValues[i]},{_layers[1][i]},{exactValues.Sub(_layers[1]).Norm() / exactValues.Norm()},{residual:0.00E+0},{iters}");
-                    continue;
-                }
+        // var sw = new StreamWriter("csv/test5.csv");
+        // using (sw) {
+        //     for (int i = 0; i < _spaceGrid.Points.Length; i++) {
+        //         if (i == 0) {
+        //             sw.WriteLine("$x_i$,Точное,Численное,Погрешность,Невязка,Кол-во итераций");
+        //             sw.WriteLine($"{_spaceGrid.Points[i]},{exactValues[i]},{_layers[1][i]},{exactValues.Sub(_layers[1]).Norm() / exactValues.Norm()},{residual:0.00E+0},{iters}");
+        //             continue;
+        //         }
 
-                sw.WriteLine($"{_spaceGrid.Points[i]},{exactValues[i]},{_layers[1][i]},,,");
-            }
-        }
+        //         sw.WriteLine($"{_spaceGrid.Points[i]},{exactValues[i]},{_layers[1][i]},,,");
+        //     }
+        // }
     }
 
     private void AssemblyLocalMatrices(int ielem, double timeDifference) {
@@ -177,7 +187,7 @@ public class MFE {
     private void AssemblySLAE(int itime, double timeDifference) {
         _vector.Fill(0);
         _remasteredGlobalMatrix.Clear();
-        
+
         for (int ielem = 0; ielem < _elements.Length; ielem++) {
             AssemblyLocalMatrices(ielem, timeDifference);
             AssemblyLocalVector(ielem, itime, timeDifference);
@@ -190,8 +200,9 @@ public class MFE {
 
             _localVector.Fill(0);
 
-            for (int i = 0; i < _stiffnessMatrix.Size; i++)
+            for (int i = 0; i < _stiffnessMatrix.Size; i++) {
                 _remasteredGlobalMatrix.Diagonal[index + i] += _stiffnessMatrix[i, i];
+            }
 
             // строчно-столбцовое хранение ленточной матрицы
             for (int i = 0; i < _stiffnessMatrix.Size - 1; i++) {
@@ -243,6 +254,70 @@ public class MFE {
 
         _vector[0] = _test.U(_spaceGrid.Points[0], _timeGrid.Points[itime]);
         _vector[^1] = _test.U(_spaceGrid.Points[^1], _timeGrid.Points[itime]);
+    }
+
+    private void Linearization() {
+        for (int ielem = 0; ielem < _elements.Length; ielem++) {
+            int index = 2 * ielem;
+            double lenght = _elements[ielem].Interval.Lenght;
+
+            _stiffnessMatrix[0, 0] = _test.DerivativeLambda() *
+                                      (37.0 / (30.0 * lenght) * _layers[1][index] - 22.0 / (15.0 * lenght) * _layers[1][index + 1] + 7.0 / (30.0 * lenght) * _layers[1][index + 2]);
+            _stiffnessMatrix[0, 1] = _test.DerivativeLambda() *
+                                      (6.0 / (5.0 * lenght) * _layers[1][index] - 16.0 / (15.0 * lenght) * _layers[1][index + 1] - 2.0 / (15.0 * lenght) * _layers[1][index + 2]);
+            _stiffnessMatrix[0, 2] = _test.DerivativeLambda() *
+                                      (-1.0 / (10.0 * lenght) * _layers[1][index] - 2.0 / (15.0 * lenght) * _layers[1][index + 1] + 7.0 / (30.0 * lenght) * _layers[1][index + 2]);
+
+            _stiffnessMatrix[1, 0] = _test.DerivativeLambda() *
+                                      (-22.0 / (15.0 * lenght) * _layers[1][index] + 8.0 / (5.0 * lenght) * _layers[1][index + 1] - 2.0 / (15.0 * lenght) * _layers[1][index + 2]);
+            _stiffnessMatrix[1, 1] = _test.DerivativeLambda() *
+                                      (-16.0 / (15.0 * lenght) * _layers[1][index] + 32.0 / (15.0 * lenght) * _layers[1][index + 1] - 16.0 / (15.0 * lenght) * _layers[1][index + 2]);
+            _stiffnessMatrix[1, 2] = _test.DerivativeLambda() *
+                                      (-2.0 / (15.0 * lenght) * _layers[1][index] + 8.0 / (5.0 * lenght) * _layers[1][index + 1] - 22.0 / (15.0 * lenght) * _layers[1][index + 2]);
+
+            _stiffnessMatrix[2, 0] = _test.DerivativeLambda() *
+                                      (7.0 / (30.0 * lenght) * _layers[1][index] - 2.0 / (15.0 * lenght) * _layers[1][index + 1] - 1.0 / (10.0 * lenght) * _layers[1][index + 2]);
+            _stiffnessMatrix[2, 1] = _test.DerivativeLambda() *
+                                      (-2.0 / (15.0 * lenght) * _layers[1][index] - 16.0 / (15.0 * lenght) * _layers[1][index + 1] + 6.0 / (5.0 * lenght) * _layers[1][index + 2]);
+            _stiffnessMatrix[2, 2] = _test.DerivativeLambda() *
+                                      (7.0 / (30.0 * lenght) * _layers[1][index] - 22.0 / (15.0 * lenght) * _layers[1][index + 1] + 37.0 / (30.0 * lenght) * _layers[1][index + 2]);
+
+            _vector[index] += _test.DerivativeLambda() * _layers[1][index] *
+                                  (37.0 / (30.0 * lenght) * _layers[1][index] + 6.0 / (5.0 * lenght) * _layers[1][index + 1] - 1.0 / (10.0 * lenght) * _layers[1][index + 2]) +
+                                  _test.DerivativeLambda() * _layers[1][index + 1] *
+                                 (-22.0 / (15.0 * lenght) * _layers[1][index] - 16.0 / (15.0 * lenght) * _layers[1][index + 1] - 2.0 / (15.0 * lenght) * _layers[1][index + 2]) +
+                                  _test.DerivativeLambda() * _layers[1][index + 2] *
+                                  (7.0 / (30.0 * lenght) * _layers[1][index] - 2.0 / (15.0 * lenght) * _layers[1][index + 1] + 7.0 / (30.0 * lenght) * _layers[1][index + 2]);
+            _vector[index + 1] += _test.DerivativeLambda() * _layers[1][index] *
+                                 (-22.0 / (15.0 * lenght) * _layers[1][index] - 16.0 / (15.0 * lenght) * _layers[1][index + 1] - 2.0 / (15.0 * lenght) * _layers[1][index + 2]) +
+                                  _test.DerivativeLambda() * _layers[1][index + 1] *
+                                  (8.0 / (5.0 * lenght) * _layers[1][index] + 32.0 / (15.0 * lenght) * _layers[1][index + 1] + 8.0 / (5.0 * lenght) * _layers[1][index + 2]) +
+                                  _test.DerivativeLambda() * _layers[1][index + 2] *
+                                  (-2.0 / (15.0 * lenght) * _layers[1][index] - 16.0 / (15.0 * lenght) * _layers[1][index + 1] - 22.0 / (15.0 * lenght) * _layers[1][index + 2]);
+            _vector[index + 2] += _test.DerivativeLambda() * _layers[1][index] *
+                                  (7.0 / (30.0 * lenght) * _layers[1][index] - 2.0 / (15.0 * lenght) * _layers[1][index + 1] + 7.0 / (30.0 * lenght) * _layers[1][index + 2]) +
+                                  _test.DerivativeLambda() * _layers[1][index + 1] *
+                                 (-2.0 / (15.0 * lenght) * _layers[1][index] - 16.0 / (15.0 * lenght) * _layers[1][index + 1] - 22.0 / (15.0 * lenght) * _layers[1][index + 2]) +
+                                  _test.DerivativeLambda() * _layers[1][index + 2] *
+                                 (-1.0 / (10.0 * lenght) * _layers[1][index] + 6.0 / (5.0 * lenght) * _layers[1][index + 1] + 37.0 / (30.0 * lenght) * _layers[1][index + 2]);
+
+            for (int i = 0; i < _stiffnessMatrix.Size; i++) {
+                _remasteredGlobalMatrix.Diagonal[index + i] += _stiffnessMatrix[i, i];
+            }
+
+            for (int i = 0; i < _stiffnessMatrix.Size - 1; i++) {
+                for (int j = i + 1; j < _stiffnessMatrix.Size; j++) {
+                    int tmpi = i;
+                    int tmpj = j;
+
+                    if (j > 1)
+                        (tmpi, tmpj) = (j - 1, i);
+
+                    _remasteredGlobalMatrix.Lower[index + tmpi + 1][tmpj] += _stiffnessMatrix[j, i];
+                    _remasteredGlobalMatrix.Upper[index + tmpi + 1][tmpj] += _stiffnessMatrix[i, j];
+                }
+            }
+        }
     }
 
     public static MFEBuilder CreateBuilder()
