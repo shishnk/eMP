@@ -4,8 +4,10 @@ public interface ITest {
     public double U(double x, double t);
 
     public double F(double x, double t);
+
     public Func<double, double> Lambda(Func<double, double> lambda);
 
+    public double DerivativeLambda(double weight);
 }
 
 public class Test1 : ITest {
@@ -17,6 +19,9 @@ public class Test1 : ITest {
 
     public Func<double, double> Lambda(Func<double, double> lambda)
         => (u) => lambda(u);
+
+    public double DerivativeLambda(double weight)
+        => 1;
 }
 
 public class Test2 : ITest {
@@ -28,6 +33,9 @@ public class Test2 : ITest {
 
     public Func<double, double> Lambda(Func<double, double> lambda)
         => (u) => lambda(u);
+
+    public double DerivativeLambda(double weight)
+        => 1;
 }
 
 public class Test3 : ITest {
@@ -39,6 +47,9 @@ public class Test3 : ITest {
 
     public Func<double, double> Lambda(Func<double, double> lambda)
         => (u) => lambda(u) * lambda(u);
+
+    public double DerivativeLambda(double weight)
+        => 2 * weight;
 }
 
 public class Test4 : ITest {
@@ -50,4 +61,7 @@ public class Test4 : ITest {
 
     public Func<double, double> Lambda(Func<double, double> lambda)
         => (u) => Math.Exp(lambda(u));
+
+    public double DerivativeLambda(double weight)
+        => Math.Exp(weight);
 }
