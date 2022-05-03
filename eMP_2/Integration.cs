@@ -19,9 +19,9 @@ public record Integration {
 
     public double GaussOrder5(MFE.Basis psiI, MFE.Basis psiJ, double a, double b) {
         double qi, pi;
-        double result = 0;
+        double result = 0.0;
 
-        double h = Math.Abs(b - a);
+        double h = b - a;
 
         for (int i = 0; i < 3; i++) {
             qi = _weights[i];
@@ -35,9 +35,9 @@ public record Integration {
 
     public double GaussOrder5(Func<double, double> lambda, MFE.Basis psiI, MFE.Basis psiJ, double a, double b) {
         double qi, pi;
-        double result = 0;
+        double result = 0.0;
 
-        double h = Math.Abs(b - a);
+        double h = b - a;
 
         for (int i = 0; i < 3; i++) {
             qi = _weights[i];
