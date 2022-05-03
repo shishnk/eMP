@@ -288,19 +288,19 @@ public class MFE {
             _stiffnessMatrix[2, 1] = -2.0 / (15.0 * lenght) * _layers[1][index] * _test.DerivativeLambda(_layers[1][index + 1]) - 16.0 / (15.0 * lenght) * _layers[1][index + 1] * _test.DerivativeLambda(_layers[1][index + 1]) + 6.0 / (5.0 * lenght) * _layers[1][index + 2] * _test.DerivativeLambda(_layers[1][index + 1]);
             _stiffnessMatrix[2, 2] = 7.0 / (30.0 * lenght) * _layers[1][index] * _test.DerivativeLambda(_layers[1][index + 2]) - 22.0 / (15.0 * lenght) * _layers[1][index + 1] * _test.DerivativeLambda(_layers[1][index + 2]) + 37.0 / (30.0 * lenght) * _layers[1][index + 2] * _test.DerivativeLambda(_layers[1][index + 2]);
 
-            _localVector[0] = _layers[1][index] *
+            _vector[index] += _layers[1][index] *
                                   (37.0 / (30.0 * lenght) * _layers[1][index] * _test.DerivativeLambda(_layers[1][index]) + 6.0 / (5.0 * lenght) * _layers[1][index + 1] * _test.DerivativeLambda(_layers[1][index + 1]) - 1.0 / (10.0 * lenght) * _layers[1][index + 2] * _test.DerivativeLambda(_layers[1][index + 2])) +
                                     _layers[1][index + 1] *
                                  (-22.0 / (15.0 * lenght) * _layers[1][index] * _test.DerivativeLambda(_layers[1][index]) - 16.0 / (15.0 * lenght) * _layers[1][index + 1] * _test.DerivativeLambda(_layers[1][index + 1]) - 2.0 / (15.0 * lenght) * _layers[1][index + 2] * _test.DerivativeLambda(_layers[1][index + 2])) +
                                     _layers[1][index + 2] *
                                   (7.0 / (30.0 * lenght) * _layers[1][index] * _test.DerivativeLambda(_layers[1][index]) - 2.0 / (15.0 * lenght) * _layers[1][index + 1] * _test.DerivativeLambda(_layers[1][index + 1]) + 7.0 / (30.0 * lenght) * _layers[1][index + 2] * _test.DerivativeLambda(_layers[1][index + 2]));
-            _localVector[1] = _layers[1][index] *
+            _vector[index + 1] += _layers[1][index] *
                                  (-22.0 / (15.0 * lenght) * _layers[1][index] * _test.DerivativeLambda(_layers[1][index]) - 16.0 / (15.0 * lenght) * _layers[1][index + 1] * _test.DerivativeLambda(_layers[1][index + 1]) - 2.0 / (15.0 * lenght) * _layers[1][index + 2] * _test.DerivativeLambda(_layers[1][index + 2])) +
                                     _layers[1][index + 1] *
                                   (8.0 / (5.0 * lenght) * _layers[1][index] * _test.DerivativeLambda(_layers[1][index]) + 32.0 / (15.0 * lenght) * _layers[1][index + 1] * _test.DerivativeLambda(_layers[1][index + 1]) + 8.0 / (5.0 * lenght) * _layers[1][index + 2] * _test.DerivativeLambda(_layers[1][index + 2])) +
                                     _layers[1][index + 2] *
                                   (-2.0 / (15.0 * lenght) * _layers[1][index] * _test.DerivativeLambda(_layers[1][index]) - 16.0 / (15.0 * lenght) * _layers[1][index + 1] * _test.DerivativeLambda(_layers[1][index + 1]) - 22.0 / (15.0 * lenght) * _layers[1][index + 2] * _test.DerivativeLambda(_layers[1][index + 2]));
-            _localVector[2] = _layers[1][index] *
+            _vector[index + 2] += _layers[1][index] *
                                   (7.0 / (30.0 * lenght) * _layers[1][index] * _test.DerivativeLambda(_layers[1][index]) - 2.0 / (15.0 * lenght) * _layers[1][index + 1] * _test.DerivativeLambda(_layers[1][index + 1]) + 7.0 / (30.0 * lenght) * _layers[1][index + 2] * _test.DerivativeLambda(_layers[1][index + 2])) +
                                     _layers[1][index + 1] *
                                  (-2.0 / (15.0 * lenght) * _layers[1][index] * _test.DerivativeLambda(_layers[1][index]) - 16.0 / (15.0 * lenght) * _layers[1][index + 1] * _test.DerivativeLambda(_layers[1][index + 1]) - 22.0 / (15.0 * lenght) * _layers[1][index + 2] * _test.DerivativeLambda(_layers[1][index + 2])) +
@@ -323,12 +323,6 @@ public class MFE {
                     _remasteredGlobalMatrix.Upper[index + tmpi + 1][tmpj] += _stiffnessMatrix[i, j];
                 }
             }
-
-            _vector[index] += _localVector[0];
-            _vector[index + 1] += _localVector[1];
-            _vector[index + 2] += _localVector[2];
-
-            _localVector.Fill(0);
         }
     }
 
