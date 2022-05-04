@@ -1,0 +1,20 @@
+{
+  "Initial area in X": {
+    "Left Border": 0.0,
+    "Right Border": 1.0
+  },
+  "Splits by X": 1,
+  "Initial area in Y": {
+    "Left Border": 0.0,
+    "Right Border": 1.0
+  },
+  "Splits by Y": 1,
+  "Initial area in Z": {
+    "Left Border": 0.0,
+    "Right Border": 1.0
+  },
+  "Splits by Z": 1,
+  
+  /*Коэффициент разрядки*/
+  "Coef": null
+}
