@@ -11,6 +11,7 @@
      <Using Include="System.ComponentModel"/>
      <Using Include="Newtonsoft.Json"/>
      <Using Include="Newtonsoft.Json.Linq"/>
+     <Using Include="System.Collections.Immutable"/>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
 
