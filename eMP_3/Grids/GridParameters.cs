@@ -65,7 +65,7 @@ public class GridParametersJsonConverter : JsonConverter {
         splitsZ = Convert.ToInt32(token);
 
         token = maintoken["Coef"];
-        if (token is null) {
+        if (token is not null) {
             coef = Convert.ToDouble(token);
         } else {
             coef = null;
