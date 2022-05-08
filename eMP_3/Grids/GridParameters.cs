@@ -38,7 +38,6 @@ public class GridParametersJsonConverter : JsonConverter {
         if (reader.TokenType == JsonToken.Null || reader.TokenType != JsonToken.StartObject)
             return null;
 
-        GridParameters value;
         Interval intervalX;
         Interval intervalY;
         Interval intervalZ;
@@ -66,14 +65,12 @@ public class GridParametersJsonConverter : JsonConverter {
 
         token = maintoken["Coef"];
         if (token is not null) {
-            coef = Convert.ToDouble(token);
+            coef = double.TryParse(token.ToString(), out double res) ? res : null;
         } else {
             coef = null;
         }
 
-        value = new(intervalX, splitsX, intervalY, splitsY, intervalZ, splitsZ, coef);
-
-        return value;
+        return new GridParameters(intervalX, splitsX, intervalY, splitsY, intervalZ, splitsZ, coef);
     }
 
     public override bool CanConvert(Type objectType)
@@ -109,7 +106,6 @@ public readonly record struct GridParameters {
             using (sr) {
                 return JsonConvert.DeserializeObject<GridParameters>(sr.ReadToEnd());
             }
-
         } catch (Exception ex) {
             Console.WriteLine($"We had problem: {ex.Message}");
             return null;

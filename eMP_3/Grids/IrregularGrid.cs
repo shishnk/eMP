@@ -2,19 +2,27 @@ namespace eMP_3;
 
 public class IrregularGrid : Grid {
     private readonly Point3D[] _points = default!;
+    private readonly List<Point3D> _internalPoints = default!;
     public override ImmutableArray<Point3D> Points => _points.ToImmutableArray();
+    public override ImmutableList<Point3D> InternalPoints => _internalPoints.ToImmutableList();
 
     public IrregularGrid(GridParameters gridParameters) {
         _points = new Point3D[(gridParameters.SplitsX + 1) * (gridParameters.SplitsY + 1) * (gridParameters.SplitsZ + 1)];
+        _internalPoints = new();
         Build(gridParameters);
     }
 
     private void Build(GridParameters gridParameters) {
         try {
-            if (gridParameters.SplitsX < 1 || gridParameters.SplitsY < 1 || gridParameters.SplitsZ < 1)
+            if (gridParameters.SplitsX < 1 || gridParameters.SplitsY < 1 || gridParameters.SplitsZ < 1) {
                 throw new Exception("The number of splits must be greater than or equal to 1");
+            }
 
             ArgumentNullException.ThrowIfNull(gridParameters.K, $"{nameof(gridParameters.K)} cannot be null");
+
+            if (gridParameters.K <= 0) {
+                throw new Exception("The coefficient must be greater than 0");
+            }
 
             double[] pointsX = new double[gridParameters.SplitsX + 1];
             double[] pointsY = new double[gridParameters.SplitsY + 1];
@@ -55,7 +63,7 @@ public class IrregularGrid : Grid {
                 pointsY[i] = pointsY[i - 1] + hy;
             }
 
-            for (int i = 1; i < pointsY.Length; i++) {
+            for (int i = 1; i < pointsZ.Length; i++) {
                 pointsZ[i] = pointsZ[i - 1] + hz;
             }
 
@@ -69,8 +77,15 @@ public class IrregularGrid : Grid {
                 }
             }
 
-            WritePoints();
+            for (int i = 0; i < _points.Length; i++) {
+                if (_points[i].X > _points[0].X && _points[i].X < _points[^1].X &&
+                    _points[i].Y > _points[0].Y && _points[i].Y < _points[^1].Y &&
+                    _points[i].Z > _points[0].Z && _points[i].Z < _points[^1].Z) {
+                    _internalPoints.Add(_points[i]);
+                }
+            }
 
+            WritePoints();
         } catch (Exception ex) {
             Console.WriteLine($"We had problem: {ex.Message}");
         }
