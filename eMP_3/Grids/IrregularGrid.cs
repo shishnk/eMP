@@ -87,26 +87,28 @@ public class IrregularGrid : Grid {
                 }
             }
 
-            index = 0;
-            int ielem = 0;
+            int nx = pointsX.Length;
+            int ny = pointsY.Length;
+            int nz = pointsZ.Length;
 
-            for (int i = 0; i < pointsX.Length; i++) {
-                if (ielem == _elements.Length) {
-                    break;
-                }
-                for (int j = 0; j < pointsY.Length; j++) {
-                    for (int k = 0; k < pointsZ.Length; k++) {
-                        _elements[ielem][index++] = Array.IndexOf(_points, new(pointsX[i], pointsY[j], pointsZ[k]));
-                        if (index == 8) {
-                            i = ielem;
-                            index = 0;
-                            ielem++;
-                        }
+            int Nx = pointsX.Length - 1;
+            int Ny = pointsY.Length - 1;
+            int Nz = pointsZ.Length - 1;
+
+            for (int k = 0; k < Nz; k++) {
+                for (int j = 0; j < Ny; j++) {
+                    for (int i = 0; i < Nx; i++) {
+                        _elements[i + Nx * j + k * Ny * Nz][0] =   i   +   j   * nx +   k   * nx * ny;
+                        _elements[i + Nx * j + k * Ny * Nz][1] = (i+1) +   j   * nx +   k   * nx * ny;
+                        _elements[i + Nx * j + k * Ny * Nz][2] =   i   + (j+1) * nx +   k   * nx * ny;
+                        _elements[i + Nx * j + k * Ny * Nz][3] = (i+1) + (j+1) * nx +   k   * nx * ny;
+                        _elements[i + Nx * j + k * Ny * Nz][4] =   i   +   j   * nx + (k+1) * nx * ny;
+                        _elements[i + Nx * j + k * Ny * Nz][5] = (i+1) +   j   * nx + (k+1) * nx * ny;
+                        _elements[i + Nx * j + k * Ny * Nz][6] =   i   + (j+1) * nx + (k+1) * nx * ny;
+                        _elements[i + Nx * j + k * Ny * Nz][7] = (i+1) + (j+1) * nx + (k+1) * nx * ny;
                     }
                 }
             }
-
-            _elements = _elements.Select(childList => childList.OrderBy(x => x).ToArray()).ToArray();
 
             WritePoints();
         } catch (Exception ex) {

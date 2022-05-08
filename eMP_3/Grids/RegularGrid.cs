@@ -47,10 +47,10 @@ public class RegularGrid : Grid {
 
             int index = 0;
 
-            for (int i = 0; i < pointsZ.Length; i++) {
+            for (int k = 0; k < pointsZ.Length; k++) {
                 for (int j = 0; j < pointsY.Length; j++) {
-                    for (int k = 0; k < pointsX.Length; k++) {
-                        _points[index++] = new(pointsX[k], pointsY[j], pointsZ[i]);
+                    for (int i = 0; i < pointsX.Length; i++) {
+                        _points[index++] = new(pointsX[i], pointsY[j], pointsZ[k]);
                     }
                 }
             }
@@ -60,6 +60,29 @@ public class RegularGrid : Grid {
                     _points[i].Y > _points[0].Y && _points[i].Y < _points[^1].Y &&
                     _points[i].Z > _points[0].Z && _points[i].Z < _points[^1].Z) {
                     _internalPoints.Add(_points[i]);
+                }
+            }
+
+            int nx = pointsX.Length;
+            int ny = pointsY.Length;
+            int nz = pointsZ.Length;
+
+            int Nx = pointsX.Length - 1;
+            int Ny = pointsY.Length - 1;
+            int Nz = pointsZ.Length - 1;
+
+            for (int k = 0; k < Nz; k++) {
+                for (int j = 0; j < Ny; j++) {
+                    for (int i = 0; i < Nx; i++) {
+                        _elements[i + Nx * j + k * Ny * Nz][0] =   i   +   j   * nx +   k   * nx * ny;
+                        _elements[i + Nx * j + k * Ny * Nz][1] = (i+1) +   j   * nx +   k   * nx * ny;
+                        _elements[i + Nx * j + k * Ny * Nz][2] =   i   + (j+1) * nx +   k   * nx * ny;
+                        _elements[i + Nx * j + k * Ny * Nz][3] = (i+1) + (j+1) * nx +   k   * nx * ny;
+                        _elements[i + Nx * j + k * Ny * Nz][4] =   i   +   j   * nx + (k+1) * nx * ny;
+                        _elements[i + Nx * j + k * Ny * Nz][5] = (i+1) +   j   * nx + (k+1) * nx * ny;
+                        _elements[i + Nx * j + k * Ny * Nz][6] =   i   + (j+1) * nx + (k+1) * nx * ny;
+                        _elements[i + Nx * j + k * Ny * Nz][7] = (i+1) + (j+1) * nx + (k+1) * nx * ny;
+                    }
                 }
             }
 
