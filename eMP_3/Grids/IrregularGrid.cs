@@ -3,8 +3,10 @@ namespace eMP_3;
 public class IrregularGrid : Grid {
     private readonly Point3D[] _points = default!;
     private readonly List<Point3D> _internalPoints = default!;
+    private int[][] _elements = default!;
     public override ImmutableArray<Point3D> Points => _points.ToImmutableArray();
     public override ImmutableList<Point3D> InternalPoints => _internalPoints.ToImmutableList();
+    public override ImmutableArray<ImmutableArray<int>> Elements => _elements.Select(item => item.ToImmutableArray()).ToImmutableArray();
 
     public IrregularGrid(GridParameters gridParameters) {
         _points = new Point3D[(gridParameters.SplitsX + 1) * (gridParameters.SplitsY + 1) * (gridParameters.SplitsZ + 1)];
@@ -84,6 +86,27 @@ public class IrregularGrid : Grid {
                     _internalPoints.Add(_points[i]);
                 }
             }
+
+            index = 0;
+            int ielem = 0;
+
+            for (int i = 0; i < pointsX.Length; i++) {
+                if (ielem == _elements.Length) {
+                    break;
+                }
+                for (int j = 0; j < pointsY.Length; j++) {
+                    for (int k = 0; k < pointsZ.Length; k++) {
+                        _elements[ielem][index++] = Array.IndexOf(_points, new(pointsX[i], pointsY[j], pointsZ[k]));
+                        if (index == 8) {
+                            i = ielem;
+                            index = 0;
+                            ielem++;
+                        }
+                    }
+                }
+            }
+
+            _elements = _elements.Select(childList => childList.OrderBy(x => x).ToArray()).ToArray();
 
             WritePoints();
         } catch (Exception ex) {

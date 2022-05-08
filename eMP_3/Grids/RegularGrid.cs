@@ -3,12 +3,15 @@ namespace eMP_3;
 public class RegularGrid : Grid {
     private readonly Point3D[] _points = default!;
     private readonly List<Point3D> _internalPoints = default!;
+    private int[][] _elements = default!;
     public override ImmutableArray<Point3D> Points => _points.ToImmutableArray();
     public override ImmutableList<Point3D> InternalPoints => _internalPoints.ToImmutableList();
+    public override ImmutableArray<ImmutableArray<int>> Elements => _elements.Select(item => item.ToImmutableArray()).ToImmutableArray();
 
     public RegularGrid(GridParameters gridParameters) {
         _points = new Point3D[(gridParameters.SplitsX + 1) * (gridParameters.SplitsY + 1) * (gridParameters.SplitsZ + 1)];
         _internalPoints = new();
+        _elements = new double[gridParameters.SplitsX * gridParameters.SplitsY * gridParameters.SplitsZ].Select(_ => new int[8]).ToArray();
         Build(gridParameters);
     }
 
