@@ -3,7 +3,7 @@ namespace eMP_3;
 public class RegularGrid : Grid {
     private readonly Point3D[] _points = default!;
     private readonly List<Point3D> _internalPoints = default!;
-    private int[][] _elements = default!;
+    private readonly int[][] _elements = default!;
     public override ImmutableArray<Point3D> Points => _points.ToImmutableArray();
     public override ImmutableList<Point3D> InternalPoints => _internalPoints.ToImmutableList();
     public override ImmutableArray<ImmutableArray<int>> Elements => _elements.Select(item => item.ToImmutableArray()).ToImmutableArray();
@@ -74,14 +74,14 @@ public class RegularGrid : Grid {
             for (int k = 0; k < Nz; k++) {
                 for (int j = 0; j < Ny; j++) {
                     for (int i = 0; i < Nx; i++) {
-                        _elements[i + Nx * j + k * Ny * Nz][0] =   i   +   j   * nx +   k   * nx * ny;
-                        _elements[i + Nx * j + k * Ny * Nz][1] = (i+1) +   j   * nx +   k   * nx * ny;
-                        _elements[i + Nx * j + k * Ny * Nz][2] =   i   + (j+1) * nx +   k   * nx * ny;
-                        _elements[i + Nx * j + k * Ny * Nz][3] = (i+1) + (j+1) * nx +   k   * nx * ny;
-                        _elements[i + Nx * j + k * Ny * Nz][4] =   i   +   j   * nx + (k+1) * nx * ny;
-                        _elements[i + Nx * j + k * Ny * Nz][5] = (i+1) +   j   * nx + (k+1) * nx * ny;
-                        _elements[i + Nx * j + k * Ny * Nz][6] =   i   + (j+1) * nx + (k+1) * nx * ny;
-                        _elements[i + Nx * j + k * Ny * Nz][7] = (i+1) + (j+1) * nx + (k+1) * nx * ny;
+                        _elements[i + (Nx * j) + (k * Ny * Nz)][0] = i + (j * nx) + (k * nx * ny);
+                        _elements[i + (Nx * j) + (k * Ny * Nz)][1] = i + 1 + (j * nx) + (k * nx * ny);
+                        _elements[i + (Nx * j) + (k * Ny * Nz)][2] = i + ((j + 1) * nx) + (k * nx * ny);
+                        _elements[i + (Nx * j) + (k * Ny * Nz)][3] = i + 1 + ((j + 1) * nx) + (k * nx * ny);
+                        _elements[i + (Nx * j) + (k * Ny * Nz)][4] = i + (j * nx) + ((k + 1) * nx * ny);
+                        _elements[i + (Nx * j) + (k * Ny * Nz)][5] = i + 1 + (j * nx) + ((k + 1) * nx * ny);
+                        _elements[i + (Nx * j) + (k * Ny * Nz)][6] = i + ((j + 1) * nx) + ((k + 1) * nx * ny);
+                        _elements[i + (Nx * j) + (k * Ny * Nz)][7] = i + 1 + ((j + 1) * nx) + ((k + 1) * nx * ny);
                     }
                 }
             }
