@@ -4,6 +4,7 @@ public class RegularGrid : Grid {
     private readonly Point3D[] _points = default!;
     private readonly List<Point3D> _internalPoints = default!;
     private readonly int[][] _elements = default!;
+    private readonly int[][] _sides = default!;
     public override ImmutableArray<Point3D> Points => _points.ToImmutableArray();
     public override ImmutableList<Point3D> InternalPoints => _internalPoints.ToImmutableList();
     public override ImmutableArray<ImmutableArray<int>> Elements => _elements.Select(item => item.ToImmutableArray()).ToImmutableArray();
@@ -12,6 +13,12 @@ public class RegularGrid : Grid {
         _points = new Point3D[(gridParameters.SplitsX + 1) * (gridParameters.SplitsY + 1) * (gridParameters.SplitsZ + 1)];
         _internalPoints = new();
         _elements = new double[gridParameters.SplitsX * gridParameters.SplitsY * gridParameters.SplitsZ].Select(_ => new int[8]).ToArray();
+        _sides[0] = new int[(gridParameters.SplitsX + 1) * (gridParameters.SplitsZ + 1)]; // front
+        _sides[1] = new int[(gridParameters.SplitsX + 1) * (gridParameters.SplitsZ + 1)]; // back
+        _sides[2] = new int[(gridParameters.SplitsY + 1) * (gridParameters.SplitsZ + 1)]; // left
+        _sides[3] = new int[(gridParameters.SplitsY + 1) * (gridParameters.SplitsZ + 1)]; // right
+        _sides[4] = new int[(gridParameters.SplitsX + 1) * (gridParameters.SplitsY + 1)]; // bottom
+        _sides[5] = new int[(gridParameters.SplitsX + 1) * (gridParameters.SplitsY + 1)]; // top
         Build(gridParameters);
     }
 
