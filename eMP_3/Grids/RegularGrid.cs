@@ -71,17 +71,37 @@ public class RegularGrid : Grid {
             int Ny = pointsY.Length - 1;
             int Nz = pointsZ.Length - 1;
 
+            // Alexander Edition, it's cool!
+
+            // for (int k = 0; k < Nz; k++) {
+            //     for (int j = 0; j < Ny; j++) {
+            //         for (int i = 0; i < Nx; i++) {
+            //             _elements[i + (j * Nx) + (k * Nx * Ny)][0] = i + (j * nx) + (k * nx * ny);
+            //             _elements[i + (j * Nx) + (k * Nx * Ny)][1] = i + 1 + (j * nx) + (k * nx * ny);
+            //             _elements[i + (j * Nx) + (k * Nx * Ny)][2] = i + ((j + 1) * nx) + (k * nx * ny);
+            //             _elements[i + (j * Nx) + (k * Nx * Ny)][3] = i + 1 + ((j + 1) * nx) + (k * nx * ny);
+            //             _elements[i + (j * Nx) + (k * Nx * Ny)][4] = i + (j * nx) + ((k + 1) * nx * ny);
+            //             _elements[i + (j * Nx) + (k * Nx * Ny)][5] = i + 1 + (j * nx) + ((k + 1) * nx * ny);
+            //             _elements[i + (j * Nx) + (k * Nx * Ny)][6] = i + ((j + 1) * nx) + ((k + 1) * nx * ny);
+            //             _elements[i + (j * Nx) + (k * Nx * Ny)][7] = i + 1 + ((j + 1) * nx) + ((k + 1) * nx * ny);
+            //         }
+            //     }
+            // }
+
+            index = 0;
+
             for (int k = 0; k < Nz; k++) {
                 for (int j = 0; j < Ny; j++) {
                     for (int i = 0; i < Nx; i++) {
-                        _elements[i + (j * Nx) + (k * Nx * Ny)][0] = i + (j * nx) + (k * nx * ny);
-                        _elements[i + (j * Nx) + (k * Nx * Ny)][1] = i + 1 + (j * nx) + (k * nx * ny);
-                        _elements[i + (j * Nx) + (k * Nx * Ny)][2] = i + ((j + 1) * nx) + (k * nx * ny);
-                        _elements[i + (j * Nx) + (k * Nx * Ny)][3] = i + 1 + ((j + 1) * nx) + (k * nx * ny);
-                        _elements[i + (j * Nx) + (k * Nx * Ny)][4] = i + (j * nx) + ((k + 1) * nx * ny);
-                        _elements[i + (j * Nx) + (k * Nx * Ny)][5] = i + 1 + (j * nx) + ((k + 1) * nx * ny);
-                        _elements[i + (j * Nx) + (k * Nx * Ny)][6] = i + ((j + 1) * nx) + ((k + 1) * nx * ny);
-                        _elements[i + (j * Nx) + (k * Nx * Ny)][7] = i + 1 + ((j + 1) * nx) + ((k + 1) * nx * ny);
+                        _elements[index][0] = i + (j * nx) + (k * nx * ny);
+                        _elements[index][1] = i + 1 + (j * nx) + (k * nx * ny);
+                        _elements[index][2] = i + ((j + 1) * nx) + (k * nx * ny);
+                        _elements[index][3] = i + 1 + ((j + 1) * nx) + (k * nx * ny);
+                        _elements[index][4] = i + (j * nx) + ((k + 1) * nx * ny);
+                        _elements[index][5] = i + 1 + (j * nx) + ((k + 1) * nx * ny);
+                        _elements[index][6] = i + ((j + 1) * nx) + ((k + 1) * nx * ny);
+                        _elements[index][7] = i + 1 + ((j + 1) * nx) + ((k + 1) * nx * ny);
+                        index++;
                     }
                 }
             }
@@ -89,24 +109,24 @@ public class RegularGrid : Grid {
             // front and back
             for (int k = 0; k < nz; k++) {
                 for (int i = 0; i < nx; i++) {
-                    _sides[0][i + k * nx] = i +      0        + (k * nx * ny);
-                    _sides[1][i + k * nx] = i + (nx * (ny-1)) + (k * nx * ny);
+                    _sides[0][i + (k * nx)] = i + 0 + (k * nx * ny);
+                    _sides[1][i + (k * nx)] = i + (nx * (ny - 1)) + (k * nx * ny);
                 }
             }
 
             // left and right
             for (int k = 0; k < nz; k++) {
                 for (int j = 0; j < ny; j++) {
-                    _sides[2][j + k * ny] =    0   + j * nx + (k * nx * ny);
-                    _sides[3][j + k * ny] = (nx-1) + j * nx + (k * nx * ny);
+                    _sides[2][j + (k * ny)] = 0 + (j * nx) + (k * nx * ny);
+                    _sides[3][j + (k * ny)] = nx - 1 + (j * nx) + (k * nx * ny);
                 }
             }
 
             // bottom and top
             for (int j = 0; j < ny; j++) {
                 for (int i = 0; i < nx; i++) {
-                    _sides[4][i + j * nx] = i + j * nx +        0          ;
-                    _sides[5][i + j * nx] = i + j * nx + (nx * ny * (nz-1));
+                    _sides[4][i + (j * nx)] = i + (j * nx) + 0;
+                    _sides[5][i + (j * nx)] = i + (j * nx) + (nx * ny * (nz - 1));
                 }
             }
 
