@@ -2,15 +2,21 @@ namespace eMP_3;
 
 public class IrregularGrid : Grid {
     private readonly Point3D[] _points = default!;
-    private readonly List<Point3D> _internalPoints = default!;
     private readonly int[][] _elements = default!;
+    private readonly int[][] _sides = default!;
     public override ImmutableArray<Point3D> Points => _points.ToImmutableArray();
-    public override ImmutableList<Point3D> InternalPoints => _internalPoints.ToImmutableList();
     public override ImmutableArray<ImmutableArray<int>> Elements => _elements.Select(item => item.ToImmutableArray()).ToImmutableArray();
+    public override ImmutableArray<ImmutableArray<int>> Sides => _sides.Select(item => item.ToImmutableArray()).ToImmutableArray();
 
     public IrregularGrid(GridParameters gridParameters) {
         _points = new Point3D[(gridParameters.SplitsX + 1) * (gridParameters.SplitsY + 1) * (gridParameters.SplitsZ + 1)];
-        _internalPoints = new();
+        _sides = new int[6][];
+        _sides[0] = new int[(gridParameters.SplitsX + 1) * (gridParameters.SplitsZ + 1)]; // front
+        _sides[1] = new int[(gridParameters.SplitsX + 1) * (gridParameters.SplitsZ + 1)]; // back
+        _sides[2] = new int[(gridParameters.SplitsY + 1) * (gridParameters.SplitsZ + 1)]; // left
+        _sides[3] = new int[(gridParameters.SplitsY + 1) * (gridParameters.SplitsZ + 1)]; // right
+        _sides[4] = new int[(gridParameters.SplitsX + 1) * (gridParameters.SplitsY + 1)]; // bottom
+        _sides[5] = new int[(gridParameters.SplitsX + 1) * (gridParameters.SplitsY + 1)]; // top
         Build(gridParameters);
     }
 
@@ -79,13 +85,7 @@ public class IrregularGrid : Grid {
                 }
             }
 
-            for (int i = 0; i < _points.Length; i++) {
-                if (_points[i].X > _points[0].X && _points[i].X < _points[^1].X &&
-                    _points[i].Y > _points[0].Y && _points[i].Y < _points[^1].Y &&
-                    _points[i].Z > _points[0].Z && _points[i].Z < _points[^1].Z) {
-                    _internalPoints.Add(_points[i]);
-                }
-            }
+            // k по z, j по y, i по x
 
             int nx = pointsX.Length;
             int ny = pointsY.Length;
@@ -107,6 +107,30 @@ public class IrregularGrid : Grid {
                         _elements[i + (j * Nx) + (k * Nx * Ny)][6] = i + ((j + 1) * nx) + ((k + 1) * nx * ny);
                         _elements[i + (j * Nx) + (k * Nx * Ny)][7] = i + 1 + ((j + 1) * nx) + ((k + 1) * nx * ny);
                     }
+                }
+            }
+
+            // front and back
+            for (int k = 0; k < nz; k++) {
+                for (int i = 0; i < nx; i++) {
+                    _sides[0][i + k * nx] = i +      0        + (k * nx * ny);
+                    _sides[1][i + k * nx] = i + (nx * (ny-1)) + (k * nx * ny);
+                }
+            }
+
+            // left and right
+            for (int k = 0; k < nz; k++) {
+                for (int j = 0; j < ny; j++) {
+                    _sides[2][j + k * ny] =    0   + j * nx + (k * nx * ny);
+                    _sides[3][j + k * ny] = (nx-1) + j * nx + (k * nx * ny);
+                }
+            }
+
+            // bottom and top
+            for (int j = 0; j < ny; j++) {
+                for (int i = 0; i < nx; i++) {
+                    _sides[4][i + j * nx] = i + j * nx +        0          ;
+                    _sides[5][i + j * nx] = i + j * nx + (nx * ny * (nz-1));
                 }
             }
 
