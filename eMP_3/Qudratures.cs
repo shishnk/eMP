@@ -24,7 +24,7 @@ public static class Quadratures {
         double[] points = { -1.0 / 3.0 * Math.Sqrt(5 + (2 * Math.Sqrt(10.0 / 7.0))),
                             1.0 / 3.0 * Math.Sqrt(5 - (2 * Math.Sqrt(10.0 / 7.0))),
                             0.0,
-                            1.0 / 3.0 * Math.Sqrt(5 - (2 * Math.Sqrt(10.0 / 7.0))),
+                            -1.0 / 3.0 * Math.Sqrt(5 - (2 * Math.Sqrt(10.0 / 7.0))),
                             1.0 / 3.0 * Math.Sqrt(5 + (2 * Math.Sqrt(10.0 / 7.0)))};
 
         double[] weights = { (322.0 - (13.0 * Math.Sqrt(70.0))) / 900.0, (322.0 + (13.0 * Math.Sqrt(70.0))) / 900.0,
