@@ -201,11 +201,50 @@ public class FEM {
     private void AccountingDirichletBoundary() {
         for (int iside = 0; iside < _grid.Sides.Length; iside++) {
             for (int inode = 0; inode < _grid.Sides[iside].Length; inode++) {
-                _globalMatrix.di[_grid.Sides[iside][inode]] = 1.0;
+                _globalMatrix.di[2 * _grid.Sides[iside][inode]] = 1.0;
+                _globalMatrix.di[(2 * _grid.Sides[iside][inode]) + 1] = 1.0;
                 _vector[2 * _grid.Sides[iside][inode]] = _test.Us(_grid.Points[_grid.Sides[iside][inode]]);
                 _vector[(2 * _grid.Sides[iside][inode]) + 1] = _test.Uc(_grid.Points[_grid.Sides[iside][inode]]);
 
-                // TODO -> обнулить строку
+                int count = 2 * _grid.Sides[iside][inode];
+
+                for (int k = _globalMatrix.ig[2 * _grid.Sides[iside][inode]]; k < _globalMatrix.ig[(2 * _grid.Sides[iside][inode]) + 1]; k++) {
+                    _globalMatrix.ggl[k] = 0.0;
+                }
+
+                for (int i = (2 * _grid.Sides[iside][inode]) + 1; i < _globalMatrix.Size; i++) {
+                    int check = 0;
+
+                    for (int k = _globalMatrix.ig[i]; k < _globalMatrix.ig[i + 1]; k++) {
+                        if (check == count) {
+                            _globalMatrix.ggu[k] = 0.0;
+                            break;
+                        }
+
+                        check++;
+                    }
+                }
+
+                count = (2 * _grid.Sides[iside][inode]) + 1;
+
+                for (int k = _globalMatrix.ig[(2 * _grid.Sides[iside][inode]) + 1]; k < _globalMatrix.ig[(2 * _grid.Sides[iside][inode]) + 2]; k++) {
+                    _globalMatrix.ggl[k] = 0.0;
+                }
+
+                for (int i = (2 *_grid.Sides[iside][inode]) + 2; i < _globalMatrix.Size; i++) {
+                    int check = 0;
+
+                    for (int k = _globalMatrix.ig[i]; k < _globalMatrix.ig[i + 1]; k++) {
+                        if (check == count) {
+                            _globalMatrix.ggu[k] = 0.0;
+                            break;
+                        }
+
+                        check++;
+                    }
+                }
+
+                // _globalMatrix.PrintDense("kek.txt");
             }
         }
     }
