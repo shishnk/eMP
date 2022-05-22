@@ -43,7 +43,7 @@ public class FEM {
 
             Init();
             Solve();
-            // Err();
+            Err();
         } catch (Exception ex) {
             Console.WriteLine($"We had problem: {ex.Message}");
         }
@@ -102,8 +102,6 @@ public class FEM {
 
         InitSLAE(sizeOffDiag);
 
-        _globalMatrix.ig[0] = 0;
-        _globalMatrix.ig[1] = 0;
         _globalMatrix.ig[2] = 1;
 
         for (int i = 1; i < list.Length; i++) {
@@ -111,18 +109,27 @@ public class FEM {
             _globalMatrix.ig[(2 * i) + 2] = _globalMatrix.ig[(2 * i) + 1] + (2 * list[i].Count) + 1;
         }
 
-        int index = 0;
-
         _globalMatrix.jg = new int[_globalMatrix.ig[^1]];
         _globalMatrix.ggl = new double[_globalMatrix.ig[^1]];
         _globalMatrix.ggu = new double[_globalMatrix.ig[^1]];
 
-        for (int i = 1; i < _globalMatrix.Size; i++) {
-            int count = 0;
+        int index = 1;
 
-            for (int k = _globalMatrix.ig[i]; k < _globalMatrix.ig[i + 1]; k++) {
-                _globalMatrix.jg[index++] = count++;
+        for (int i = 1; i < list.Length; i++) {
+            for (int j = 0; j < list[i].Count; j++) {
+                _globalMatrix.jg[index] = 2 * list[i][j];
+                _globalMatrix.jg[index + 1] = (2 * list[i][j]) + 1;
+                index += 2;
             }
+
+            for (int k = 0; k < list[i].Count; k++) {
+                _globalMatrix.jg[index] = 2 * list[i][k];
+                _globalMatrix.jg[index + 1] = (2 * list[i][k]) + 1;
+                index += 2;
+            }
+
+            _globalMatrix.jg[index] = 2 * i;
+            index++;
         }
     }
 
@@ -212,39 +219,31 @@ public class FEM {
 
                 int diagonal = 2 * _grid.Sides[iside][inode];
 
-                for (int k = _globalMatrix.ig[2 * _grid.Sides[iside][inode]]; k < _globalMatrix.ig[(2 * _grid.Sides[iside][inode]) + 1]; k++) {
+                for (int k = _globalMatrix.ig[diagonal]; k < _globalMatrix.ig[diagonal + 1]; k++) {
                     _globalMatrix.ggl[k] = 0.0;
                 }
 
-                for (int i = (2 * _grid.Sides[iside][inode]) + 1; i < _globalMatrix.Size; i++) {
-                    int check = 0;
-
+                for (int i = diagonal + 1; i < _globalMatrix.Size; i++) {
                     for (int k = _globalMatrix.ig[i]; k < _globalMatrix.ig[i + 1]; k++) {
-                        if (check == diagonal) {
+                        if (_globalMatrix.jg[k] == diagonal) {
                             _globalMatrix.ggu[k] = 0.0;
                             break;
                         }
-
-                        check++;
                     }
                 }
 
                 diagonal = (2 * _grid.Sides[iside][inode]) + 1;
 
-                for (int k = _globalMatrix.ig[(2 * _grid.Sides[iside][inode]) + 1]; k < _globalMatrix.ig[(2 * _grid.Sides[iside][inode]) + 2]; k++) {
+                for (int k = _globalMatrix.ig[diagonal]; k < _globalMatrix.ig[diagonal + 1]; k++) {
                     _globalMatrix.ggl[k] = 0.0;
                 }
 
-                for (int i = (2 * _grid.Sides[iside][inode]) + 2; i < _globalMatrix.Size; i++) {
-                    int check = 0;
-
+                for (int i = diagonal + 1; i < _globalMatrix.Size; i++) {
                     for (int k = _globalMatrix.ig[i]; k < _globalMatrix.ig[i + 1]; k++) {
-                        if (check == diagonal) {
+                        if (_globalMatrix.jg[k] == diagonal) {
                             _globalMatrix.ggu[k] = 0.0;
                             break;
                         }
-
-                        check++;
                     }
                 }
             }
