@@ -43,6 +43,7 @@ public class FEM {
 
             Init();
             Solve();
+            // Err();
         } catch (Exception ex) {
             Console.WriteLine($"We had problem: {ex.Message}");
         }
@@ -143,6 +144,9 @@ public class FEM {
                 _vector[2 * _grid.Elements[ielem][i]] += _localVector1[i];
                 _vector[(2 * _grid.Elements[ielem][i]) + 1] += _localVector2[i];
             }
+
+            _localVector1.Fill(0);
+            _localVector2.Fill(0);
         }
     }
 
@@ -192,8 +196,8 @@ public class FEM {
     private void AssemblyLocalVector(int ielem) {
         for (int i = 0; i < _massMatrix.Size; i++) {
             for (int j = 0; j < _massMatrix.Size; j++) {
-                _localVector1[i] += _test.Fs(_grid.Points[(2 * ielem) + j]) * _massMatrix[i, j];
-                _localVector2[i] += _test.Fc(_grid.Points[(2 * ielem) + j]) * _massMatrix[i, j];
+                _localVector1[i] += _test.Fs(_grid.Points[_grid.Elements[ielem][j]]) * _massMatrix[i, j];
+                _localVector2[i] += _test.Fc(_grid.Points[_grid.Elements[ielem][j]]) * _massMatrix[i, j];
             }
         }
     }
@@ -206,7 +210,7 @@ public class FEM {
                 _vector[2 * _grid.Sides[iside][inode]] = _test.Us(_grid.Points[_grid.Sides[iside][inode]]);
                 _vector[(2 * _grid.Sides[iside][inode]) + 1] = _test.Uc(_grid.Points[_grid.Sides[iside][inode]]);
 
-                int count = 2 * _grid.Sides[iside][inode];
+                int diagonal = 2 * _grid.Sides[iside][inode];
 
                 for (int k = _globalMatrix.ig[2 * _grid.Sides[iside][inode]]; k < _globalMatrix.ig[(2 * _grid.Sides[iside][inode]) + 1]; k++) {
                     _globalMatrix.ggl[k] = 0.0;
@@ -216,7 +220,7 @@ public class FEM {
                     int check = 0;
 
                     for (int k = _globalMatrix.ig[i]; k < _globalMatrix.ig[i + 1]; k++) {
-                        if (check == count) {
+                        if (check == diagonal) {
                             _globalMatrix.ggu[k] = 0.0;
                             break;
                         }
@@ -225,17 +229,17 @@ public class FEM {
                     }
                 }
 
-                count = (2 * _grid.Sides[iside][inode]) + 1;
+                diagonal = (2 * _grid.Sides[iside][inode]) + 1;
 
                 for (int k = _globalMatrix.ig[(2 * _grid.Sides[iside][inode]) + 1]; k < _globalMatrix.ig[(2 * _grid.Sides[iside][inode]) + 2]; k++) {
                     _globalMatrix.ggl[k] = 0.0;
                 }
 
-                for (int i = (2 *_grid.Sides[iside][inode]) + 2; i < _globalMatrix.Size; i++) {
+                for (int i = (2 * _grid.Sides[iside][inode]) + 2; i < _globalMatrix.Size; i++) {
                     int check = 0;
 
                     for (int k = _globalMatrix.ig[i]; k < _globalMatrix.ig[i + 1]; k++) {
-                        if (check == count) {
+                        if (check == diagonal) {
                             _globalMatrix.ggu[k] = 0.0;
                             break;
                         }
@@ -243,9 +247,16 @@ public class FEM {
                         check++;
                     }
                 }
-
-                // _globalMatrix.PrintDense("kek.txt");
             }
+        }
+    }
+
+    //for report
+    private void Err() {
+        using var sw = new StreamWriter("results/err.txt");
+        for (int i = 0; i < _grid.Points.Length; i++) {
+            sw.WriteLine(Math.Abs(_solver.Solution!.Value[2 * i] - _test.Us(_grid.Points[i])));
+            sw.WriteLine(Math.Abs(_solver.Solution!.Value[(2 * i) + 1] - _test.Uc(_grid.Points[i])));
         }
     }
 
