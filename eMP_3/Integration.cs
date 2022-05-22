@@ -30,7 +30,9 @@ public static class Integration {
         double hx = secondPoint.X - firstPoint.X;
         double hy = secondPoint.Y - firstPoint.Y;
         double hz = secondPoint.Z - firstPoint.Z;
-        double result = 0.0;
+        double resultX = 0.0;
+        double resultY = 0.0;
+        double resultZ = 0.0;
 
         foreach (var qi in quadratures) {
             foreach (var qj in quadratures) {
@@ -39,12 +41,12 @@ public static class Integration {
                                       ((qj.Node * hy) + firstPoint.Y + secondPoint.Y) / 2.0,
                                       ((qk.Node * hz) + firstPoint.Z + secondPoint.Z) / 2.0);
 
-                    result += DerivativeX(point, hx) * qi.Weight * qj.Weight * qk.Weight;
+                    resultX += DerivativeX(point, hx) * qi.Weight * qj.Weight * qk.Weight;
                 }
             }
         }
 
-        result *= hx * hy * hz / 8.0;
+        resultX *= hx * hy * hz / 8.0;
 
         foreach (var qi in quadratures) {
             foreach (var qj in quadratures) {
@@ -53,12 +55,12 @@ public static class Integration {
                                       ((qj.Node * hy) + firstPoint.Y + secondPoint.Y) / 2.0,
                                       ((qk.Node * hz) + firstPoint.Z + secondPoint.Z) / 2.0);
 
-                    result += DerivativeY(point, hy) * qi.Weight * qj.Weight * qk.Weight;
+                    resultY += DerivativeY(point, hy) * qi.Weight * qj.Weight * qk.Weight;
                 }
             }
         }
 
-        result *= hx * hy * hz / 8.0;
+        resultY *= hx * hy * hz / 8.0;
 
         foreach (var qi in quadratures) {
             foreach (var qj in quadratures) {
@@ -67,12 +69,14 @@ public static class Integration {
                                       ((qj.Node * hy) + firstPoint.Y + secondPoint.Y) / 2.0,
                                       ((qk.Node * hz) + firstPoint.Z + secondPoint.Z) / 2.0);
 
-                    result += DerivativeZ(point, hz) * qi.Weight * qj.Weight * qk.Weight;
+                    resultZ += DerivativeZ(point, hz) * qi.Weight * qj.Weight * qk.Weight;
                 }
             }
         }
 
-        return result * hx * hy * hz / 8.0;
+        resultZ *= hx * hy * hz / 8.0;
+
+        return resultX + resultY + resultZ;
 
         double DerivativeX(Point3D point, double h)
             => (psiI(point + (h, 0, 0)) - psiI(point - (h, 0, 0))) / (2 * h) *
