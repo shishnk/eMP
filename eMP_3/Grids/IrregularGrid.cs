@@ -8,7 +8,7 @@ public class IrregularGrid : Grid {
     public override ImmutableArray<ImmutableArray<int>> Elements => _elements.Select(item => item.ToImmutableArray()).ToImmutableArray();
     public override ImmutableArray<ImmutableArray<int>> Sides => _sides.Select(item => item.ToImmutableArray()).ToImmutableArray();
 
-    public IrregularGrid(GridParameters gridParameters) {
+    public IrregularGrid(GridParameters gridParameters) : base(gridParameters) {
         _points = new Point3D[(gridParameters.SplitsX + 1) * (gridParameters.SplitsY + 1) * (gridParameters.SplitsZ + 1)];
         _sides = new int[6][];
         _sides[0] = new int[(gridParameters.SplitsX + 1) * (gridParameters.SplitsZ + 1)]; // front

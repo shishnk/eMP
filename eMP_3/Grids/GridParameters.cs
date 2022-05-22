@@ -31,6 +31,14 @@ public class GridParametersJsonConverter : JsonConverter {
         writer.WriteComment("Коэффициент разрядки");
         writer.WritePropertyName("Coef");
         writer.WriteValue(gridParameters.K);
+
+        writer.WriteComment("Коэффициенты уравнения");
+        writer.WritePropertyName("Lambda");
+        writer.WriteValue(gridParameters.Lambda);
+        writer.WritePropertyName("Omega");
+        writer.WriteValue(gridParameters.Omega);
+        writer.WritePropertyName("Chi");
+        writer.WriteValue(gridParameters.Chi);
         writer.WriteEndObject();
     }
 
@@ -45,6 +53,7 @@ public class GridParametersJsonConverter : JsonConverter {
         int splitsY;
         int splitsZ;
         double? coef;
+        double lambda, omega, sigma, chi;
 
         var maintoken = JObject.Load(reader);
 
@@ -70,7 +79,19 @@ public class GridParametersJsonConverter : JsonConverter {
             coef = null;
         }
 
-        return new GridParameters(intervalX, splitsX, intervalY, splitsY, intervalZ, splitsZ, coef);
+        token = maintoken["Lambda"];
+        lambda = Convert.ToDouble(token);
+
+        token = maintoken["Omega"];
+        omega = Convert.ToDouble(token);
+
+        token = maintoken["Sigma"];
+        sigma = Convert.ToDouble(token);
+
+        token = maintoken["Chi"];
+        chi = Convert.ToDouble(token);
+
+        return new GridParameters(intervalX, splitsX, intervalY, splitsY, intervalZ, splitsZ, coef, lambda, omega, sigma, chi);
     }
 
     public override bool CanConvert(Type objectType)
@@ -86,8 +107,13 @@ public readonly record struct GridParameters {
     public Interval IntervalZ { get; init; }
     public int SplitsZ { get; init; }
     public double? K { get; init; }
+    public double Lambda { get; init; }
+    public double Omega { get; init; }
+    public double Sigma { get; init; }
+    public double Chi { get; init; }
 
-    public GridParameters(Interval intervalX, int splitsX, Interval intervalY, int splitsY, Interval intervalZ, int splitsZ, double? k) {
+    public GridParameters(Interval intervalX, int splitsX, Interval intervalY, int splitsY, Interval intervalZ, int splitsZ,
+                         double? k, double lambda, double omega, double sigma, double chi) {
         IntervalX = intervalX;
         SplitsX = splitsX;
         IntervalY = intervalY;
@@ -95,6 +121,10 @@ public readonly record struct GridParameters {
         IntervalZ = intervalZ;
         SplitsZ = splitsZ;
         K = k;
+        Lambda = lambda;
+        Omega = omega;
+        Sigma = sigma;
+        Chi = chi;
     }
 
     public static GridParameters? ReadJson(string jsonPath) {

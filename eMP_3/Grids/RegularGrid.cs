@@ -8,7 +8,7 @@ public class RegularGrid : Grid {
     public override ImmutableArray<ImmutableArray<int>> Elements => _elements.Select(item => item.ToImmutableArray()).ToImmutableArray();
     public override ImmutableArray<ImmutableArray<int>> Sides => _sides.Select(item => item.ToImmutableArray()).ToImmutableArray();
 
-    public RegularGrid(GridParameters gridParameters) {
+    public RegularGrid(GridParameters gridParameters) : base (gridParameters)  {
         _points = new Point3D[(gridParameters.SplitsX + 1) * (gridParameters.SplitsY + 1) * (gridParameters.SplitsZ + 1)];
         _elements = new double[gridParameters.SplitsX * gridParameters.SplitsY * gridParameters.SplitsZ].Select(_ => new int[8]).ToArray();
         _sides = new int[6][];
