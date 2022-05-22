@@ -95,23 +95,6 @@ public class IrregularGrid : Grid {
             int Ny = pointsY.Length - 1;
             int Nz = pointsZ.Length - 1;
 
-            // Alexander Edition, it's cool!
-
-            // for (int k = 0; k < Nz; k++) {
-            //     for (int j = 0; j < Ny; j++) {
-            //         for (int i = 0; i < Nx; i++) {
-            //             _elements[i + (j * Nx) + (k * Nx * Ny)][0] = i + (j * nx) + (k * nx * ny);
-            //             _elements[i + (j * Nx) + (k * Nx * Ny)][1] = i + 1 + (j * nx) + (k * nx * ny);
-            //             _elements[i + (j * Nx) + (k * Nx * Ny)][2] = i + ((j + 1) * nx) + (k * nx * ny);
-            //             _elements[i + (j * Nx) + (k * Nx * Ny)][3] = i + 1 + ((j + 1) * nx) + (k * nx * ny);
-            //             _elements[i + (j * Nx) + (k * Nx * Ny)][4] = i + (j * nx) + ((k + 1) * nx * ny);
-            //             _elements[i + (j * Nx) + (k * Nx * Ny)][5] = i + 1 + (j * nx) + ((k + 1) * nx * ny);
-            //             _elements[i + (j * Nx) + (k * Nx * Ny)][6] = i + ((j + 1) * nx) + ((k + 1) * nx * ny);
-            //             _elements[i + (j * Nx) + (k * Nx * Ny)][7] = i + 1 + ((j + 1) * nx) + ((k + 1) * nx * ny);
-            //         }
-            //     }
-            // }
-
             index = 0;
 
             for (int k = 0; k < Nz; k++) {
@@ -124,8 +107,7 @@ public class IrregularGrid : Grid {
                         _elements[index][4] = i + (j * nx) + ((k + 1) * nx * ny);
                         _elements[index][5] = i + 1 + (j * nx) + ((k + 1) * nx * ny);
                         _elements[index][6] = i + ((j + 1) * nx) + ((k + 1) * nx * ny);
-                        _elements[index][7] = i + 1 + ((j + 1) * nx) + ((k + 1) * nx * ny);
-                        index++;
+                        _elements[index++][7] = i + 1 + ((j + 1) * nx) + ((k + 1) * nx * ny);
                     }
                 }
             }
