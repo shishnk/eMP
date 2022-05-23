@@ -1,20 +1,24 @@
 {
   "Initial area in X": {
     "Left Border": 0.0,
-    "Right Border": 1.0
+    "Right Border": 3.0
   },
-  "Splits by X": 1,
+  "Splits by X": 3,
   "Initial area in Y": {
     "Left Border": 0.0,
-    "Right Border": 1.0
+    "Right Border": 3.0
   },
-  "Splits by Y": 1,
+  "Splits by Y": 3,
   "Initial area in Z": {
     "Left Border": 0.0,
-    "Right Border": 1.0
+    "Right Border": 2.0
   },
-  "Splits by Z": 1,
-  
+  "Splits by Z": 2,
   /*Коэффициент разрядки*/
-  "Coef": null
+  "Coef": null,
+  /*Коэффициенты уравнения*/
+  "Lambda": 1,
+  "Omega": 1,
+  "Sigma" : 1,
+  "Chi": 1
 }
