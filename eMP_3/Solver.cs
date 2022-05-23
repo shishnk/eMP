@@ -1,21 +1,15 @@
 namespace eMP_3;
 
-public enum SolverPreconditionings {
-    None,
-    LU
-}
-
 public abstract class Solver {
     protected SparseMatrix _matrix = default!;
     protected Vector<double> _vector = default!;
     protected Vector<double>? _solution;
     public int MaxIters { get; init; }
     public double Eps { get; init; }
-    public SolverPreconditionings SolverPreconditioning { get; init; }
     public ImmutableArray<double>? Solution => _solution?.ToImmutableArray();
 
-    protected Solver(int maxIters, double eps, SolverPreconditionings solverPreconditioning = SolverPreconditionings.None)
-        => (MaxIters, Eps, SolverPreconditioning) = (maxIters, eps, solverPreconditioning);
+    protected Solver(int maxIters, double eps)
+        => (MaxIters, Eps) = (maxIters, eps);
 
     public void SetMatrix(SparseMatrix matrix)
         => _matrix = matrix;
@@ -33,10 +27,6 @@ public class LOS : Solver {
         try {
             ArgumentNullException.ThrowIfNull(_matrix, $"{nameof(_matrix)} cannot be null, set the matrix");
             ArgumentNullException.ThrowIfNull(_vector, $"{nameof(_vector)} cannot be null, set the vector");
-
-            // if (SolverPreconditioning == SolverPreconditionings.LU) {
-            //     LOSWithLU();
-            // }
 
             double alpha, beta;
             double squareNorm;
@@ -72,82 +62,154 @@ public class LOS : Solver {
             Console.WriteLine($"We had problem: {ex.Message}");
         }
     }
-
-    // public void LOSWithLU() {
-    //     uint index;
-    //     double alpha, beta;
-    //     double squareNorm;
-
-    //     _solution = new(_vector.Length);
-
-    //     Vector<double> r = new(_vector.Length);
-    //     Vector<double> z = new(_vector.Length);
-    //     Vector<double> p = new(_vector.Length);
-    //     Vector<double> tmp = new(_vector.Length);
-
-    //     LU();
-
-    //     r = Direct(pr - MultDi(x));
-    //     z = Reverse(r);
-    //     p = Direct(Mult(z));
-
-    //     squareNorm = r * r;
-
-    //     for (index = 0; index < maxIter && squareNorm > eps; index++) {
-    //         alpha = (p * r) / (p * p);
-    //         squareNorm = (r * r) - (alpha * alpha) * (p * p);
-    //         x = x + alpha * z;
-    //         r = r - alpha * p;
-
-    //         tmp = Direct(Mult(Reverse(r)));
-
-    //         beta = -(p * tmp) / (p * p);
-    //         z = Reverse(r) + beta * z;
-    //         p = tmp + beta * p;
-    //     }
-
-    //     countIter = index;
-    // }
-
-    // private void LU() {
-    //     double suml = 0.0;
-    //     double sumu = 0.0;
-    //     double sumdi = 0.0;
-
-    //     for (uint i = 0; i < _matrix.Size; i++) {
-    //         uint i0 = _matrix.ig[i];
-    //         uint i1 = _matrix.ig[i + 1];
-
-    //         for (uint k = i0; k < i1; k++) {
-    //             uint j = _matrix.jg[k];
-    //             uint j0 = _matrix.ig[j];
-    //             uint j1 = _matrix.ig[j + 1];
-    //             uint ik = i0;
-    //             uint kj = j0;
-
-    //             while (ik < k && kj < j1) {
-    //                 if (jg[ik] == jg[kj]) {
-    //                     suml += gglnew.vec[ik] * ggunew.vec[kj];
-    //                     sumu += ggunew.vec[ik] * gglnew.vec[kj];
-    //                     ik++;
-    //                     kj++;
-    //                 } else {
-    //                     if (jg[ik] > jg[kj])
-    //                         kj++;
-    //                     else
-    //                         ik++;
-    //                 }
-    //             }
-
-    //             gglnew.vec[k] -= suml;
-    //             ggunew.vec[k] = (ggunew.vec[k] - sumu) / dinew.vec[j];
-    //             sumdi += gglnew.vec[k] * ggunew.vec[k];
-    //             suml = 0;
-    //             sumu = 0;
-    //         }
-
-    //         dinew.vec[i] -= sumdi;
-    //         sumdi = 0;
-    //     }
-    // }
 }
+
+public class LOSLU : Solver {
+    public LOSLU(int maxIters, double eps) : base(maxIters, eps) { }
+
+    public override void Compute() {
+        try {
+            ArgumentNullException.ThrowIfNull(_matrix, $"{nameof(_matrix)} cannot be null, set the matrix");
+            ArgumentNullException.ThrowIfNull(_vector, $"{nameof(_vector)} cannot be null, set the vector");
+
+            double alpha, beta;
+            double squareNorm;
+
+            int index;
+
+            _solution = new(_vector.Length);
+
+            double[] gglnew = new double[_matrix.ggl.Length];
+            double[] ggunew = new double[_matrix.ggu.Length];
+            double[] dinew = new double[_matrix.di.Length];
+
+            _matrix.ggl.Copy(gglnew);
+            _matrix.ggu.Copy(ggunew);
+            _matrix.di.Copy(dinew);
+
+            Vector<double> r = new(_vector.Length);
+            Vector<double> z = new(_vector.Length);
+            Vector<double> p = new(_vector.Length);
+            Vector<double> tmp = new(_vector.Length);
+
+            LU(gglnew, ggunew, dinew);
+
+            r = Direct(_vector - MultDi(_solution), gglnew, dinew);
+            z = Reverse(r, ggunew);
+            p = Direct(_matrix * z, gglnew, dinew);
+
+            squareNorm = r * r;
+
+            for (index = 0; index < MaxIters && squareNorm > Eps; index++) {
+                alpha = p * r / (p * p);
+                squareNorm = (r * r) - (alpha * alpha * (p * p));
+                _solution += alpha * z;
+                r -= alpha * p;
+
+                tmp = Direct(_matrix * Reverse(r, ggunew), gglnew, dinew);
+
+                beta = -(p * tmp) / (p * p);
+                z = Reverse(r, ggunew) + (beta * z);
+                p = tmp + (beta * p);
+            }
+        } catch (Exception ex) {
+            Console.WriteLine($"We had problem: {ex.Message}");
+        }
+    }
+
+    private Vector<double> Direct(Vector<double> vector, double[] gglnew, double[] dinew) {
+        Vector<double> y = new(vector.Length);
+        Vector<double>.Copy(vector, y);
+
+        double sum = 0.0;
+
+        for (int i = 0; i < _matrix.Size; i++) {
+            int i0 = _matrix.ig[i];
+            int i1 = _matrix.ig[i + 1];
+
+            for (int k = i0; k < i1; k++)
+                sum += gglnew[k] * y[_matrix.jg[k]];
+
+            y[i] = (y[i] - sum) / dinew[i];
+            sum = 0.0;
+        }
+
+        return y;
+    }
+
+    private Vector<double> Reverse(Vector<double> vector, double[] ggunew) {
+        Vector<double> result = new(vector.Length);
+        Vector<double>.Copy(vector, result);
+
+        for (int i = _matrix.Size - 1; i >= 0; i--) {
+            int i0 = _matrix.ig[i];
+            int i1 = _matrix.ig[i + 1];
+
+            for (int k = i0; k < i1; k++)
+                result[_matrix.jg[k]] -= ggunew[k] * result[i];
+        }
+
+        return result;
+    }
+
+    private void LU(double[] gglnew, double[] ggunew, double[] dinew) {
+        double suml = 0.0;
+        double sumu = 0.0;
+        double sumdi = 0.0;
+
+        for (int i = 0; i < _matrix.Size; i++) {
+            int i0 = _matrix.ig[i];
+            int i1 = _matrix.ig[i + 1];
+
+            for (int k = i0; k < i1; k++) {
+                int j = _matrix.jg[k];
+                int j0 = _matrix.ig[j];
+                int j1 = _matrix.ig[j + 1];
+                int ik = i0;
+                int kj = j0;
+
+                while (ik < k && kj < j1) {
+                    if (_matrix.jg[ik] == _matrix.jg[kj]) {
+                        suml += gglnew[ik] * ggunew[kj];
+                        sumu += ggunew[ik] * gglnew[kj];
+                        ik++;
+                        kj++;
+                    } else if (_matrix.jg[ik] > _matrix.jg[kj]) {
+                        kj++;
+                    } else {
+                        ik++;
+                    }
+                }
+
+                gglnew[k] -= suml;
+                ggunew[k] = (ggunew[k] - sumu) / dinew[j];
+                sumdi += gglnew[k] * ggunew[k];
+                suml = 0.0;
+                sumu = 0.0;
+            }
+
+            dinew[i] -= sumdi;
+            sumdi = 0.0;
+        }
+    }
+
+    private Vector<double> MultDi(Vector<double> vector) {
+        Vector<double> product = new(vector.Length);
+
+        for (int i = 0; i < _matrix.Size; i++) {
+            product[i] = 1 / Math.Sqrt(_matrix.di[i]) * vector[i];
+        }
+
+        return product;
+    }
+}
+
+// public class BCGSTAB : Solver {
+//     public BCGSTAB(int maxIters, double eps) : base(maxIters, eps) { }
+
+//     public override void Compute() {
+//         _solution = new(_vector.Length);
+
+//         double alpha, beta, gamma;
+//     }
+// }
