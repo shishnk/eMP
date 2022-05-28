@@ -54,4 +54,49 @@ public class SparseMatrix {
             sw.WriteLine();
         }
     }
+
+    public void AsProfileMatrix() {
+        int[] ignew = ig.ToArray();
+
+        for (int i = 0; i < Size; i++) {
+            int i0 = ig[i];
+            int i1 = ig[i + 1];
+
+            int profile = i1 - i0;
+
+            if (profile > 0) {
+                int count = i - jg[i0];
+                ignew[i + 1] = ignew[i] + count;
+            } else {
+                ignew[i + 1] = ignew[i];
+            }
+        }
+
+        double[] gglnew = new double[ignew[^1]];
+        double[] ggunew = new double[ignew[^1]];
+
+        for (int i = 0; i < Size; i++) {
+            int i0 = ignew[i];
+            int i1 = ignew[i + 1];
+
+            int j = i - (i1 - i0);
+
+            int i0Old = ig[i];
+
+            for (int ik = i0; ik < i1; ik++, j++) {
+                if (j == jg[i0Old]) {
+                    gglnew[ik] = ggl[i0Old];
+                    ggunew[ik] = ggu[i0Old];
+                    i0Old++;
+                } else {
+                    gglnew[ik] = 0.0;
+                    ggunew[ik] = 0.0;
+                }
+            }
+        }
+
+        ig = ignew;
+        ggl = gglnew;
+        ggu = ggunew;
+    }
 }

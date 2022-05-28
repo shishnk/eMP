@@ -19,6 +19,11 @@ public class FEM {
             return this;
         }
 
+        public FEMBuilder SetDecomposer(Decomposer decomposer) {
+            _fem._decomposer = decomposer;
+            return this;
+        }
+
         public static implicit operator FEM(FEMBuilder builder)
             => builder._fem;
     }
@@ -28,7 +33,8 @@ public class FEM {
     private Basis[] _basis = default!;
     private ITest _test = default!;
     private Grid _grid = default!;
-    private Solver _solver = default!;
+    private Solver? _solver;
+    private Decomposer? _decomposer;
     private Matrix _massMatrix = default!; // матрица масс
     private Matrix _stiffnessMatrix = default!; // матрица жесткости
     private SparseMatrix _globalMatrix = default!;
@@ -39,11 +45,13 @@ public class FEM {
     public void Compute() {
         try {
             ArgumentNullException.ThrowIfNull(_test, $"{nameof(_test)} cannot be null, set the test");
-            ArgumentNullException.ThrowIfNull(_solver, $"{nameof(_solver)} cannot be null, set the solver SLAE");
+
+            if (_solver is null && _decomposer is null) {
+                throw new ArgumentNullException(nameof(_solver), "Set the method of solving SLAE");
+            }
 
             Init();
             Solve();
-            Err();
         } catch (Exception ex) {
             Console.WriteLine($"We had problem: {ex.Message}");
         }
@@ -72,12 +80,17 @@ public class FEM {
         AccountingDirichletBoundary();
         _globalMatrix.PrintDense("matrix.txt");
 
-        _solver.SetMatrix(_globalMatrix);
-        _solver.SetVector(_vector);
-        _solver.Compute();
-
-        foreach (var q in _solver.Solution!) {
-            Console.WriteLine(q);
+        if (_decomposer is not null) {
+            _globalMatrix.AsProfileMatrix();
+            _decomposer.SetMatrix(_globalMatrix);
+            _decomposer.SetVector(_vector);
+            _decomposer.Compute();
+            ErrForward();
+        } else {
+            _solver!.SetMatrix(_globalMatrix);
+            _solver.SetVector(_vector);
+            _solver.Compute();
+            ErrIter();
         }
     }
 
@@ -187,14 +200,14 @@ public class FEM {
 
         for (int i = 0; i < _stiffnessMatrix.Size; i++) {
             for (int j = 0; j < _stiffnessMatrix.Size; j++) {
-                _stiffnessMatrix[i, j] = (Integration.GaussSegmentGrad(_basis[i].Invoke, _basis[j].Invoke, new(0, 0, 0), new(1, 1, 1)) /
-                (hx * hy * hz)) - (Integration.GaussSegment(_basis[i].Invoke, _basis[j].Invoke, new(0, 0, 0), new(1, 1, 1)) * (hx * hy * hz));
+                _stiffnessMatrix[i, j] = (_grid.Lambda * (Integration.GaussSegmentGrad(_basis[i].Invoke, _basis[j].Invoke, new(0, 0, 0), new(1, 1, 1)) /
+                (hx * hy * hz))) - (_grid.Omega * _grid.Omega * _grid.Chi * (Integration.GaussSegment(_basis[i].Invoke, _basis[j].Invoke, new(0, 0, 0), new(1, 1, 1)) * (hx * hy * hz)));
             }
         }
 
         for (int i = 0; i < _massMatrix.Size; i++) {
             for (int j = 0; j < _massMatrix.Size; j++) {
-                _massMatrix[i, j] = Integration.GaussSegment(_basis[i].Invoke, _basis[j].Invoke,
+                _massMatrix[i, j] = _grid.Omega * _grid.Sigma * Integration.GaussSegment(_basis[i].Invoke, _basis[j].Invoke,
                         new(0, 0, 0), new(1, 1, 1)) * (hx * hy * hz);
             }
         }
@@ -203,8 +216,8 @@ public class FEM {
     private void AssemblyLocalVector(int ielem) {
         for (int i = 0; i < _massMatrix.Size; i++) {
             for (int j = 0; j < _massMatrix.Size; j++) {
-                _localVector1[i] += _test.Fs(_grid.Points[_grid.Elements[ielem][j]]) * _massMatrix[i, j];
-                _localVector2[i] += _test.Fc(_grid.Points[_grid.Elements[ielem][j]]) * _massMatrix[i, j];
+                _localVector1[i] += _test.Fs(_grid.Points[_grid.Elements[ielem][j]]) * _massMatrix[i, j] / (_grid.Omega * _grid.Sigma);
+                _localVector2[i] += _test.Fc(_grid.Points[_grid.Elements[ielem][j]]) * _massMatrix[i, j] / (_grid.Omega * _grid.Sigma);
             }
         }
     }
@@ -251,11 +264,19 @@ public class FEM {
     }
 
     //for report
-    private void Err() {
-        using var sw = new StreamWriter("results/err.txt");
+    private void ErrIter() {
+        using var sw = new StreamWriter("results/errIter.txt");
         for (int i = 0; i < _grid.Points.Length; i++) {
-            sw.WriteLine(Math.Abs(_solver.Solution!.Value[2 * i] - _test.Us(_grid.Points[i])));
-            sw.WriteLine(Math.Abs(_solver.Solution!.Value[(2 * i) + 1] - _test.Uc(_grid.Points[i])));
+            sw.WriteLine(Math.Abs(_solver!.Solution!.Value[2 * i] - _test.Us(_grid.Points[i])));
+            sw.WriteLine(Math.Abs(_solver.Solution.Value[(2 * i) + 1] - _test.Uc(_grid.Points[i])));
+        }
+    }
+
+    private void ErrForward() {
+        using var sw = new StreamWriter("results/errForward.txt");
+        for (int i = 0; i < _grid.Points.Length; i++) {
+            sw.WriteLine(Math.Abs(_decomposer!.Solution!.Value[2 * i] - _test.Us(_grid.Points[i])));
+            sw.WriteLine(Math.Abs(_decomposer.Solution.Value[(2 * i) + 1] - _test.Uc(_grid.Points[i])));
         }
     }
 
