@@ -18,7 +18,7 @@ public class Vector<T> where T : INumber<T> {
         T result = T.Zero;
 
         for (int i = 0; i < firstVec.Length; i++) {
-            result += firstVec.vec[i] * secondVec.vec[i];
+            result += firstVec[i] * secondVec[i];
         }
 
         return result;
@@ -28,7 +28,7 @@ public class Vector<T> where T : INumber<T> {
         Vector<T> result = new(vector.Length);
 
         for (int i = 0; i < vector.Length; i++) {
-            result.vec[i] = vector.vec[i] * T.Create(constant);
+            result[i] = vector[i] * T.Create(constant);
         }
 
         return result;
@@ -38,7 +38,7 @@ public class Vector<T> where T : INumber<T> {
         Vector<T> result = new(firstVec.Length);
 
         for (int i = 0; i < firstVec.Length; i++) {
-            result.vec[i] = firstVec.vec[i] + secondVec.vec[i];
+            result[i] = firstVec[i] + secondVec[i];
         }
 
         return result;
@@ -48,7 +48,7 @@ public class Vector<T> where T : INumber<T> {
         Vector<T> result = new(firstVec.Length);
 
         for (int i = 0; i < firstVec.Length; i++) {
-            result.vec[i] = firstVec.vec[i] - secondVec.vec[i];
+            result[i] = firstVec[i] - secondVec[i];
         }
 
         return result;
