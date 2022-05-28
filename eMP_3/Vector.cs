@@ -66,6 +66,16 @@ public class Vector<T> where T : INumber<T> {
         }
     }
 
+    public double Norm() {
+        T result = T.Zero;
+
+        for (int i = 0; i < Length; i++) {
+            result += vec[i] * vec[i];
+        }
+
+        return Math.Sqrt(Convert.ToDouble(result));
+    }
+
     public ImmutableArray<T> ToImmutableArray()
         => ImmutableArray.Create(vec);
 }
