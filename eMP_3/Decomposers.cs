@@ -1,9 +1,11 @@
 namespace eMP_3;
 
 public abstract class Decomposer {
+    protected TimeSpan _runningTime;
     protected SparseMatrix _matrix = default!;
     protected Vector<double> _vector = default!;
     protected Vector<double>? _solution;
+    public TimeSpan? RunningTime => _runningTime;
     public ImmutableArray<double>? Solution => _solution?.ToImmutableArray();
 
     public void SetMatrix(SparseMatrix matrix)
@@ -20,10 +22,16 @@ public class DecomposerLDU : Decomposer {
         _solution = new(_matrix.Size);
         Vector<double>.Copy(_vector, _solution);
 
+        Stopwatch sw = Stopwatch.StartNew();
+
         LDU();
         ForwardElimination();
         DiagonalStroke();
         BackSubstitution();
+
+        sw.Stop();
+
+        _runningTime = sw.Elapsed;
     }
 
     private void LDU() {

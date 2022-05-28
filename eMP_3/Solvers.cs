@@ -1,11 +1,13 @@
 namespace eMP_3;
 
 public abstract class Solver {
+    protected TimeSpan _runningTime;
     protected SparseMatrix _matrix = default!;
     protected Vector<double> _vector = default!;
     protected Vector<double>? _solution;
     public int MaxIters { get; init; }
     public double Eps { get; init; }
+    public TimeSpan? RunningTime => _runningTime;
     public ImmutableArray<double>? Solution => _solution?.ToImmutableArray();
 
     protected Solver(int maxIters, double eps)
@@ -38,6 +40,8 @@ public class LOS : Solver {
             Vector<double> p = new(_vector.Length);
             Vector<double> tmp = new(_vector.Length);
 
+            Stopwatch sw = Stopwatch.StartNew();
+
             r = _vector - (_matrix * _solution);
 
             Vector<double>.Copy(r, z);
@@ -58,6 +62,10 @@ public class LOS : Solver {
                 z = r + (beta * z);
                 p = tmp + (beta * p);
             }
+
+            sw.Stop();
+
+            _runningTime = sw.Elapsed;
         } catch (Exception ex) {
             Console.WriteLine($"We had problem: {ex.Message}");
         }
@@ -90,6 +98,8 @@ public class LOSLU : Solver {
             Vector<double> p = new(_vector.Length);
             Vector<double> tmp = new(_vector.Length);
 
+            Stopwatch sw = Stopwatch.StartNew();
+
             LU(gglnew, ggunew, dinew);
 
             r = Direct(_vector - MultDi(_solution), gglnew, dinew);
@@ -110,6 +120,10 @@ public class LOSLU : Solver {
                 z = Reverse(r, ggunew) + (beta * z);
                 p = tmp + (beta * p);
             }
+
+            sw.Stop();
+
+            _runningTime = sw.Elapsed;
         } catch (Exception ex) {
             Console.WriteLine($"We had problem: {ex.Message}");
         }
@@ -235,6 +249,8 @@ public class BCGSTABLU : Solver {
             Vector<double> s = new(_vector.Length);
             Vector<double> t = new(_vector.Length);
 
+            Stopwatch sw = Stopwatch.StartNew();
+
             LU(gglnew, ggunew, dinew);
 
             r = Direct(_vector - (_matrix * _solution), gglnew, dinew);
@@ -256,6 +272,10 @@ public class BCGSTABLU : Solver {
             }
 
             _solution = Reverse(_solution, ggunew);
+
+            sw.Stop();
+
+            _runningTime = sw.Elapsed;
         } catch (Exception ex) {
             Console.WriteLine($"We had problem: {ex.Message}");
         }
