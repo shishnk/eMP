@@ -15,26 +15,8 @@ public abstract class Decomposer {
         => _vector = vector;
 
     public abstract void Compute();
-}
 
-public class DecomposerLDU : Decomposer {
-    public override void Compute() {
-        _solution = new(_matrix.Size);
-        Vector<double>.Copy(_vector, _solution);
-
-        Stopwatch sw = Stopwatch.StartNew();
-
-        LDU();
-        ForwardElimination();
-        DiagonalStroke();
-        BackSubstitution();
-
-        sw.Stop();
-
-        _runningTime = sw.Elapsed;
-    }
-
-    private void LDU() {
+    protected void LDU() {
         for (int i = 0; i < _matrix.Size; i++) {
             double sumdi = 0.0;
 
@@ -82,13 +64,13 @@ public class DecomposerLDU : Decomposer {
         }
     }
 
-    private void DiagonalStroke() {
+    protected void DiagonalStroke() {
         for (int i = 0; i < _matrix.Size; i++) {
             _solution![i] /= _matrix.di[i];
         }
     }
 
-    private void ForwardElimination() {
+    protected void ForwardElimination() {
         for (int i = 0; i < _matrix.Size; i++) {
             double sum = 0.0;
 
@@ -105,7 +87,7 @@ public class DecomposerLDU : Decomposer {
         }
     }
 
-    private void BackSubstitution() {
+    protected void BackSubstitution() {
         for (int i = _matrix.Size - 1; i >= 0; i--) {
             int i0 = _matrix.ig[i];
             int i1 = _matrix.ig[i + 1];
@@ -114,5 +96,23 @@ public class DecomposerLDU : Decomposer {
                 _solution![j] -= _matrix.ggu[ij] * _solution[i];
             }
         }
+    }
+}
+
+public class DecomposerLDU : Decomposer {
+    public override void Compute() {
+        _solution = new(_matrix.Size);
+        Vector<double>.Copy(_vector, _solution);
+
+        Stopwatch sw = Stopwatch.StartNew();
+
+        LDU();
+        ForwardElimination();
+        DiagonalStroke();
+        BackSubstitution();
+
+        sw.Stop();
+
+        _runningTime = sw.Elapsed;
     }
 }
