@@ -96,16 +96,6 @@ public abstract class Solver {
             sumdi = 0.0;
         }
     }
-
-    protected Vector<double> MultDi(Vector<double> vector) {
-        Vector<double> product = new(vector.Length);
-
-        for (int i = 0; i < _matrix.Size; i++) {
-            product[i] = 1 / Math.Sqrt(_matrix.di[i]) * vector[i];
-        }
-
-        return product;
-    }
 }
 
 public class LOS : Solver {
@@ -188,7 +178,7 @@ public class LOSLU : Solver {
 
             LU(gglnew, ggunew, dinew);
 
-            r = Direct(_vector - MultDi(_solution), gglnew, dinew);
+            r = Direct(_vector - (_matrix * _solution), gglnew, dinew);
             z = Reverse(r, ggunew);
             p = Direct(_matrix * z, gglnew, dinew);
 
