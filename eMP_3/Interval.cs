@@ -8,7 +8,7 @@ public readonly record struct Interval {
     public double RightBorder { get; init; }
 
     [JsonIgnore]
-    public double Lenght { get; init; }
+    public double Lenght { get; }
 
     [JsonConstructor]
     public Interval(double leftBorder, double rightBorder) {
