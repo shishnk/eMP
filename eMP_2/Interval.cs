@@ -44,13 +44,13 @@ public class IntervalConverter : JsonConverter {
 public readonly record struct Interval {
     public double LeftBorder { get; init; }
     public double RightBorder { get; init; }
-    public double Center { get; init; }
-    public double Lenght { get; init; }
+    public double Center { get; }
+    public double Lenght { get; }
 
     public Interval(double leftBorder, double rightBorder) {
         LeftBorder = leftBorder;
         RightBorder = rightBorder;
-        Center = (LeftBorder + RightBorder) / 2;
+        Center = (leftBorder + rightBorder) / 2;
         Lenght = rightBorder - leftBorder;
     }
 }
