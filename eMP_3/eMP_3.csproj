@@ -9,13 +9,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
      <PackageReference Include="System.Runtime.Experimental" Version="6.0.2" />
      <Using Include="System.ComponentModel" />
      <Using Include="Newtonsoft.Json" />
      <Using Include="Newtonsoft.Json.Linq" />
      <Using Include="System.Collections.Immutable" />
      <Using Include="System.Diagnostics" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
 
 </Project>
